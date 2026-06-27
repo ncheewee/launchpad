@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Launchpad — a personal app store</title>
+<meta name="description" content="A living index of Chee Wee's 100 app ideas — one shipped tile at a time.">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--bg:#f5f5f7;--card:#fff;--ink:#1d1d1f;--sub:#86868b;--line:#e3e3e6;
+        --a-personal:#7c6cff;--a-proptechip:#16b8a6;--a-fun:#f5a524;--a-work:#3b82f6}
+  html{scroll-behavior:smooth}
+  body{font-family:-apple-system,"SF Pro Display",Inter,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  .top{position:sticky;top:0;z-index:20;background:rgba(245,245,247,.8);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)}
+  .topin{max-width:1080px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;gap:16px}
+  .brand{font-weight:700;font-size:20px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px;text-decoration:none}
+  .brand .dot{width:27px;height:27px;border-radius:8px;background:linear-gradient(135deg,#7c6cff,#3b82f6);display:grid;place-items:center;font-size:15px}
+  .search{margin-left:auto;background:#e8e8ed;border:none;border-radius:10px;padding:9px 14px 9px 34px;width:250px;max-width:48vw;font-size:14px;color:var(--ink);
+          background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center}
+  .search:focus{outline:2px solid var(--a-personal);outline-offset:1px;background-color:#fff}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px 90px}
+  .hero{padding:38px 0 6px}
+  .eyebrow{text-transform:uppercase;letter-spacing:.09em;font-size:12px;font-weight:700;color:var(--sub)}
+  .h1{font-size:clamp(30px,5.4vw,42px);font-weight:700;letter-spacing:-.03em;margin:8px 0 6px;line-height:1.04}
+  .lead{color:var(--sub);font-size:clamp(16px,2.4vw,18px);max-width:560px}
+  .prog{margin:24px 0 2px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .bar{flex:1;height:8px;background:#e3e3e6;border-radius:99px;overflow:hidden;min-width:180px;max-width:340px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,#7c6cff,#3b82f6);border-radius:99px;transition:width .6s ease}
+  .prog b{font-size:14px;white-space:nowrap}.prog .pct{color:var(--sub);font-size:14px;white-space:nowrap}
+  .featured{margin:28px 0 6px;border-radius:22px;overflow:hidden;position:relative;display:block;text-decoration:none;box-shadow:0 14px 40px rgba(0,0,0,.12);background:#0b1020;transition:transform .2s,box-shadow .2s}
+  .featured:hover{transform:translateY(-3px);box-shadow:0 22px 56px rgba(0,0,0,.2)}
+  .featured img{width:100%;display:block;height:clamp(210px,34vw,310px);object-fit:cover;object-position:top;opacity:.9}
+  .fov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,16,32,.05) 30%,rgba(11,16,32,.88));display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(18px,3vw,28px);color:#fff}
+  .fov .tag{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#a9b4ff}
+  .fov h3{font-size:clamp(22px,3.6vw,30px);letter-spacing:-.02em;margin:5px 0 6px}
+  .fov p{max-width:520px;color:#d6d9e6;font-size:15px;line-height:1.5}
+  .fbtn{margin-top:16px;align-self:flex-start;background:#fff;color:#111;border-radius:99px;padding:11px 22px;font-weight:600;font-size:14px}
+  .rail{margin-top:34px}
+  .railhd{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .railhd h2{font-size:23px;letter-spacing:-.02em}
+  .count{font-size:13px;font-weight:700;padding:2px 10px;border-radius:99px}
+  .track{display:grid;grid-auto-flow:column;grid-auto-columns:232px;gap:18px;overflow-x:auto;padding:4px 2px 12px;scroll-snap-type:x mandatory;scrollbar-width:thin}
+  .track::-webkit-scrollbar{height:7px}.track::-webkit-scrollbar-thumb{background:#cdcdd2;border-radius:99px}
+  .card{scroll-snap-align:start;background:var(--card);border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 2px 10px rgba(0,0,0,.06);transition:transform .18s,box-shadow .18s;border:1px solid var(--line)}
+  .card:hover{transform:translateY(-4px);box-shadow:0 16px 34px rgba(0,0,0,.14)}
+  .shotwrap{aspect-ratio:16/10;overflow:hidden;background:#eee}
+  .shotwrap img{width:100%;height:100%;object-fit:cover;object-position:top;transition:transform .3s}
+  .card:hover .shotwrap img{transform:scale(1.04)}
+  .meta{display:flex;align-items:center;gap:11px;padding:12px 13px}
+  .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:19px;flex:none}
+  .mtext{min-width:0}
+  .nm{font-weight:600;font-size:15px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sub{color:var(--sub);font-size:12.5px}
+  .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:18px;margin-top:24px}
+  .empty{display:none;text-align:center;color:var(--sub);padding:60px 0;font-size:15px}
+  footer{text-align:center;color:var(--sub);font-size:13px;margin-top:58px;line-height:1.7}
+  footer a{color:var(--a-personal);text-decoration:none}
+  @media(max-width:560px){.search{width:auto;flex:1}}
+</style>
+</head>
+<body>
+  <header class="top"><div class="topin">
+    <a class="brand" href="#"><span class="dot">🚀</span>Launchpad</a>
+    <input class="search" id="q" type="search" placeholder="Search apps" aria-label="Search apps" autocomplete="off">
+  </div></header>
+
+  <div class="wrap">
+    <section class="hero" id="hero">
+      <div class="eyebrow">The 100 Apps Project</div>
+      <h1 class="h1">A personal app store,<br>one idea at a time.</h1>
+      <p class="lead">Every app I ship gets its own tile here. The goal is 100. The running gag: this store lists itself.</p>
+      <div class="prog"><b id="shipstat"></b><div class="bar"><i id="progfill"></i></div><span class="pct" id="pctstat"></span></div>
+    </section>
+
+    <a class="featured" id="featured" target="_blank" rel="noopener"></a>
+
+    <div id="rails"></div>
+    <div id="results" class="results" hidden></div>
+    <div class="empty" id="empty">No apps match your search.</div>
+
+    <footer id="foot"></footer>
+  </div>
+
+<script>
+const DATA = __DATA_JSON__;
+const CATLABEL = {Personal:'Personal', PropTechIP:'PropTech IP', Fun:'Fun & experiments', Work:'Work'};
+const CATORDER = ['Personal','PropTechIP','Fun','Work'];
+const ACCENT = {Personal:'var(--a-personal)', PropTechIP:'var(--a-proptechip)', Fun:'var(--a-fun)', Work:'var(--a-work)'};
+const TINT   = {Personal:'#efedfe', PropTechIP:'#def6f0', Fun:'#fdf0d9', Work:'#e4eefc'};
+const EMOJI  = {receipt:'🧾',idea:'💡',bolt:'⚡',clipboard:'📋',gauge:'🎛️',ball:'⚽',trend:'📈',box:'🧩',building:'🏢',tower:'🗼',message:'💬',rocket:'🚀'};
+const TARGET = 100;
+const SHIPPED = DATA.length;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function cardHTML(a){
+  return `<a class="card" href="${a.url}" target="_blank" rel="noopener" data-name="${esc(a.name).toLowerCase()}" data-desc="${esc(a.desc).toLowerCase()}">
+    <div class="shotwrap"><img loading="lazy" src="${a.shot}" alt="${esc(a.name)} screenshot"></div>
+    <div class="meta"><div class="ic" style="background:${TINT[a.cat]}">${EMOJI[a.icon]||'📱'}</div>
+    <div class="mtext"><div class="nm">${esc(a.name)}</div><div class="sub">shipped ${esc(a.last)}</div></div></div></a>`;
+}
+
+// progress
+document.getElementById('shipstat').textContent = `${SHIPPED} of ${TARGET} shipped`;
+document.getElementById('pctstat').textContent = `${Math.round(SHIPPED/TARGET*100)}% there`;
+requestAnimationFrame(()=>{document.getElementById('progfill').style.width = (SHIPPED/TARGET*100)+'%';});
+
+// featured = most recently shipped app that isn't Launchpad itself
+const featPool = DATA.filter(a=>a.slug!=='launchpad');
+const feat = featPool.reduce((m,a)=> a.days < m.days ? a : m, featPool[0]);
+document.getElementById('featured').href = feat.url;
+document.getElementById('featured').innerHTML =
+  `<img src="${feat.shot}" alt="${esc(feat.name)} screenshot">
+   <div class="fov"><div class="tag">Latest ship</div><h3>${esc(feat.name)}</h3>
+   <p>${esc(feat.desc)}</p><span class="fbtn">Open app →</span></div>`;
+
+// rails
+const railsEl = document.getElementById('rails');
+railsEl.innerHTML = CATORDER.map(c=>{
+  const items = DATA.filter(a=>a.cat===c);
+  if(!items.length) return '';
+  return `<section class="rail" data-cat="${c}"><div class="railhd"><h2>${CATLABEL[c]}</h2>
+    <span class="count" style="color:${ACCENT[c]};background:${TINT[c]}">${items.length}</span></div>
+    <div class="track">${items.map(cardHTML).join('')}</div></section>`;
+}).join('');
+
+// footer
+document.getElementById('foot').innerHTML =
+  `Built by Chee Wee &middot; ${SHIPPED}/${TARGET} apps shipped &middot; hosted on <a href="https://github.com/ncheewee/launchpad" target="_blank" rel="noopener">GitHub Pages</a><br>Yes — this page lists itself as app #${SHIPPED}.`;
+
+// search
+const q = document.getElementById('q'), hero = document.getElementById('hero'),
+      featured = document.getElementById('featured'), results = document.getElementById('results'),
+      empty = document.getElementById('empty');
+q.addEventListener('input', ()=>{
+  const t = q.value.trim().toLowerCase();
+  if(!t){ hero.hidden=false; featured.hidden=false; railsEl.hidden=false; results.hidden=true; empty.style.display='none'; return; }
+  hero.hidden=true; featured.hidden=true; railsEl.hidden=true; results.hidden=false;
+  const hits = DATA.filter(a => a.name.toLowerCase().includes(t) || a.desc.toLowerCase().includes(t) || CATLABEL[a.cat].toLowerCase().includes(t));
+  results.innerHTML = hits.map(cardHTML).join('');
+  empty.style.display = hits.length ? 'none' : 'block';
+});
+</script>
+</body>
+</html>
