@@ -19,7 +19,6 @@ const path = require('path');
 // ---- category color tokens (kept in sync with template.html CSS vars) ----
 const CATS = {
   Personal:   { label: 'Personal',          accent: '#7c6cff' },
-  PropTechIP: { label: 'PropTech IP',        accent: '#16b8a6' },
   Fun:        { label: 'Fun & experiments',  accent: '#f5a524' },
   Work:       { label: 'Work',               accent: '#3b82f6' },
 };
@@ -30,8 +29,8 @@ const APPS = [
   { slug:'second-brain-manager',      name:'Second Brain Manager',      cat:'Personal',   icon:'idea',      url:'https://ncheewee.github.io/second-brain-manager/',       shipped:'2026-06-10', desc:'A frontend for browsing and editing entries in the personal Second Brain knowledge base.' },
   { slug:'sg-ev-tco-calculator',      name:'SG EV TCO Calculator',      cat:'Personal',   icon:'bolt',      url:'https://ncheewee.github.io/sg-ev-tco-calculator/',       shipped:'2026-06-22', desc:'Total cost of ownership calculator for EVs in Singapore — COE, road tax, and charging costs included.' },
   { slug:'sg-ev-decision-lab',        name:'SG EV Decision Lab',        cat:'Personal',   icon:'car',       url:'https://ncheewee.github.io/sg-ev-decision-lab/',         shipped:'2026-06-28', desc:'Singapore EV comparison, dealer checklist, and 10-year decision lab for the buy-vs-renew call.' },
-  { slug:'inspectpro',                name:'InspectPro',                cat:'PropTechIP', icon:'clipboard', url:'https://ncheewee.github.io/inspectPro/',                 shipped:'2026-06-13', desc:'Manage property inspection checklists end to end, from scheduling a walkthrough to filing the final report.' },
-  { slug:'meteriq',                   name:'MeterIQ',                   cat:'PropTechIP', icon:'gauge',     url:'https://ncheewee.github.io/MeterIQ/',                    shipped:'2026-05-23', desc:'Smart utility meter reader — capture a meter photo and log the reading without manual entry.' },
+  { slug:'inspectpro',                name:'InspectPro',                cat:'Work',       icon:'clipboard', url:'https://ncheewee.github.io/inspectPro/',                 shipped:'2026-06-13', desc:'Manage property inspection checklists end to end, from scheduling a walkthrough to filing the final report.' },
+  { slug:'meteriq',                   name:'MeterIQ',                   cat:'Work',       icon:'gauge',     url:'https://ncheewee.github.io/MeterIQ/',                    shipped:'2026-05-23', desc:'Smart utility meter reader — capture a meter photo and log the reading without manual entry.' },
   { slug:'wc2026-predictor',          name:'WC2026 Prediction Net',     cat:'Fun',        icon:'ball',      url:'https://ncheewee.github.io/wc2026-predictor/',           shipped:'2026-06-28', desc:"World Cup 2026 predictor running Elo ratings through a Monte Carlo simulation to forecast each team's title odds." },
   { slug:'oracle-26',                 name:'Oracle 26',                 cat:'Fun',        icon:'trend',     url:'https://ncheewee.github.io/oracle-26/',                  shipped:'2026-06-28', desc:'A data-backed World Cup intelligence dashboard — live tournament odds, model readiness, and match-by-match forecasts.' },
   { slug:'enigma-print',              name:'Enigma Print',              cat:'Fun',        icon:'box',       url:'https://ncheewee.github.io/enigma-print/',               shipped:'2026-06-07', desc:'Companion mobile dashboard for a 3D-printed puzzle box.' },
