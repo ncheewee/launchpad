@@ -50,7 +50,18 @@ jobs:
           git add index.html screenshots/thumb
           if git diff --cached --quiet; then
             echo "Nothing changed."
-          else
-            git commit -m "chore: auto-rebuild Launchpad (${{ github.event_name }})"
-            git push
+            exit 0
           fi
+          git commit -m "chore: auto-rebuild Launchpad (${{ github.event_name }})"
+          # Another run may have pushed while we were building — rebase and retry
+          # so an overlapping run can never fail on a non-fast-forward push.
+          for attempt in 1 2 3; do
+            if git push; then
+              echo "Pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push rejected — syncing with remote (attempt $attempt)…"
+            git pull --rebase --autostash origin main || true
+          done
+          echo "Push still failing after 3 attempts." >&2
+          exit 1
