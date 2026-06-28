@@ -1,0 +1,56 @@
+name: Build Launchpad
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - build.js
+      - template.html
+      - screenshots.js
+      - .github/workflows/build.yml
+  workflow_dispatch:        # manual "Run workflow" button
+  schedule:
+    - cron: '0 22 * * *'    # daily 22:00 UTC = 06:00 Singapore — refreshes "days ago" + new screenshots
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-launchpad
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install playwright sharp
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Capture screenshots
+        # On the daily cron, only screenshot apps that don't have one yet (keeps history quiet).
+        # On push / manual run, re-capture everything so edits are reflected.
+        run: node screenshots.js ${{ github.event_name == 'schedule' && '--missing-only' || '' }}
+
+      - name: Rebuild index.html
+        run: node build.js
+
+      - name: Commit changes (if any)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html screenshots/thumb
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "chore: auto-rebuild Launchpad (${{ github.event_name }})"
+            git push
+          fi
