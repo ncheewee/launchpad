@@ -46,6 +46,8 @@
   .card:hover{transform:translateY(-4px);box-shadow:0 16px 34px rgba(0,0,0,.14)}
   .shotwrap{aspect-ratio:16/10;overflow:hidden;background:#eee}
   .shotwrap img{width:100%;height:100%;object-fit:cover;object-position:top;transition:transform .3s}
+  .shotph{width:100%;height:100%;display:grid;place-items:center}
+  .shotph span{font-size:40px;opacity:.55}
   .card:hover .shotwrap img{transform:scale(1.04)}
   .meta{display:flex;align-items:center;gap:11px;padding:12px 13px}
   .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:19px;flex:none}
@@ -88,14 +90,17 @@ const CATLABEL = {Personal:'Personal', PropTechIP:'PropTech IP', Fun:'Fun & expe
 const CATORDER = ['Personal','PropTechIP','Fun','Work'];
 const ACCENT = {Personal:'var(--a-personal)', PropTechIP:'var(--a-proptechip)', Fun:'var(--a-fun)', Work:'var(--a-work)'};
 const TINT   = {Personal:'#efedfe', PropTechIP:'#def6f0', Fun:'#fdf0d9', Work:'#e4eefc'};
-const EMOJI  = {receipt:'🧾',idea:'💡',bolt:'⚡',clipboard:'📋',gauge:'🎛️',ball:'⚽',trend:'📈',box:'🧩',building:'🏢',tower:'🗼',message:'💬',rocket:'🚀'};
+const EMOJI  = {receipt:'🧾',idea:'💡',bolt:'⚡',clipboard:'📋',gauge:'🎛️',ball:'⚽',trend:'📈',box:'🧩',building:'🏢',tower:'🗼',message:'💬',rocket:'🚀',car:'🚗'};
 const TARGET = 100;
 const SHIPPED = DATA.length;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 function cardHTML(a){
+  const shot = a.shot
+    ? `<img loading="lazy" src="${a.shot}" alt="${esc(a.name)} screenshot">`
+    : `<div class="shotph" style="background:${TINT[a.cat]}"><span>${EMOJI[a.icon]||'📱'}</span></div>`;
   return `<a class="card" href="${a.url}" target="_blank" rel="noopener" data-name="${esc(a.name).toLowerCase()}" data-desc="${esc(a.desc).toLowerCase()}">
-    <div class="shotwrap"><img loading="lazy" src="${a.shot}" alt="${esc(a.name)} screenshot"></div>
+    <div class="shotwrap">${shot}</div>
     <div class="meta"><div class="ic" style="background:${TINT[a.cat]}">${EMOJI[a.icon]||'📱'}</div>
     <div class="mtext"><div class="nm">${esc(a.name)}</div><div class="sub">shipped ${esc(a.last)}</div></div></div></a>`;
 }
@@ -106,7 +111,7 @@ document.getElementById('pctstat').textContent = `${Math.round(SHIPPED/TARGET*10
 requestAnimationFrame(()=>{document.getElementById('progfill').style.width = (SHIPPED/TARGET*100)+'%';});
 
 // featured = most recently shipped app that isn't Launchpad itself
-const featPool = DATA.filter(a=>a.slug!=='launchpad');
+const featPool = DATA.filter(a=>a.slug!=='launchpad' && a.shot);
 const feat = featPool.reduce((m,a)=> a.days < m.days ? a : m, featPool[0]);
 document.getElementById('featured').href = feat.url;
 document.getElementById('featured').innerHTML =
