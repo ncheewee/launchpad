@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Captures a 480x300 thumbnail of each app's live URL into screenshots/thumb/<slug>.jpg.
+ * Captures an 800x500 thumbnail of each app's live URL into screenshots/thumb/<slug>.jpg.
  * Used by the GitHub Action. Run modes:
  *   node screenshots.js                 -> (re)capture every app
  *   node screenshots.js --missing-only  -> only capture apps with no thumbnail yet
@@ -18,7 +18,7 @@ fs.mkdirSync(OUT, { recursive: true });
 
 (async () => {
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width: 1200, height: 750 }, deviceScaleFactor: 1 });
+  const ctx = await browser.newContext({ viewport: { width: 1200, height: 750 }, deviceScaleFactor: 2 });
   let shot = 0, skipped = 0, failed = 0;
   for (const a of APPS) {
     const dest = path.join(OUT, a.slug + '.jpg');
@@ -27,8 +27,8 @@ fs.mkdirSync(OUT, { recursive: true });
     try {
       await page.goto(a.url, { waitUntil: 'load', timeout: 45000 });
       await page.waitForTimeout(3000); // let charts / fonts settle
-      const buf = await page.screenshot({ clip: { x: 0, y: 0, width: 1200, height: 750 } });
-      await sharp(buf).resize(480, 300, { fit: 'cover', position: 'top' }).jpeg({ quality: 82 }).toFile(dest);
+      const buf = await page.screenshot({ clip: { x: 0, y: 0, width: 1200, height: 750 } }); // 2400x1500 px at 2x DPI
+      await sharp(buf).resize(800, 500, { fit: 'cover', position: 'top' }).jpeg({ quality: 80 }).toFile(dest);
       console.log('shot:', a.slug);
       shot++;
     } catch (e) {

@@ -28,21 +28,21 @@
   .bar{flex:1;height:8px;background:#e3e3e6;border-radius:99px;overflow:hidden;min-width:180px;max-width:340px}
   .bar i{display:block;height:100%;background:linear-gradient(90deg,#7c6cff,#3b82f6);border-radius:99px;transition:width .6s ease}
   .prog b{font-size:14px;white-space:nowrap}.prog .pct{color:var(--sub);font-size:14px;white-space:nowrap}
-  .featured{margin:28px 0 6px;border-radius:22px;overflow:hidden;position:relative;display:block;text-decoration:none;box-shadow:0 14px 40px rgba(0,0,0,.12);background:#0b1020;transition:transform .2s,box-shadow .2s}
+  .featured{margin:28px 0 6px;border-radius:22px;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);text-decoration:none;box-shadow:0 14px 40px rgba(0,0,0,.12);background:#0b1020;transition:transform .2s,box-shadow .2s}
   .featured:hover{transform:translateY(-3px);box-shadow:0 22px 56px rgba(0,0,0,.2)}
-  .featured img{width:100%;display:block;height:clamp(210px,34vw,310px);object-fit:cover;object-position:top;opacity:.9}
-  .fov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,16,32,.05) 30%,rgba(11,16,32,.88));display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(18px,3vw,28px);color:#fff}
-  .fov .tag{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#a9b4ff}
-  .fov h3{font-size:clamp(22px,3.6vw,30px);letter-spacing:-.02em;margin:5px 0 6px}
-  .fov p{max-width:520px;color:#d6d9e6;font-size:15px;line-height:1.5}
-  .fbtn{margin-top:16px;align-self:flex-start;background:#fff;color:#111;border-radius:99px;padding:11px 22px;font-weight:600;font-size:14px}
+  .fimg{position:relative;min-height:250px;background:#0b1020}
+  .fimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+  .fbody{padding:clamp(22px,3vw,34px);color:#fff;display:flex;flex-direction:column;justify-content:center;background:#0b1020}
+  .fbody .tag{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#a9b4ff}
+  .fbody h3{font-size:clamp(22px,3.4vw,30px);letter-spacing:-.02em;margin:7px 0 8px}
+  .fbody p{color:#c8cce0;font-size:15px;line-height:1.55}
+  .fbtn{margin-top:18px;align-self:flex-start;background:#fff;color:#111;border-radius:99px;padding:11px 22px;font-weight:600;font-size:14px}
   .rail{margin-top:34px}
-  .railhd{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .railhd{display:flex;align-items:center;gap:10px;margin-bottom:16px}
   .railhd h2{font-size:23px;letter-spacing:-.02em}
   .count{font-size:13px;font-weight:700;padding:2px 10px;border-radius:99px}
-  .track{display:grid;grid-auto-flow:column;grid-auto-columns:232px;gap:18px;overflow-x:auto;padding:4px 2px 12px;scroll-snap-type:x mandatory;scrollbar-width:thin}
-  .track::-webkit-scrollbar{height:7px}.track::-webkit-scrollbar-thumb{background:#cdcdd2;border-radius:99px}
-  .card{scroll-snap-align:start;background:var(--card);border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 2px 10px rgba(0,0,0,.06);transition:transform .18s,box-shadow .18s;border:1px solid var(--line)}
+  .grid-cat{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+  .card{background:var(--card);border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 2px 10px rgba(0,0,0,.06);transition:transform .18s,box-shadow .18s;border:1px solid var(--line)}
   .card:hover{transform:translateY(-4px);box-shadow:0 16px 34px rgba(0,0,0,.14)}
   .shotwrap{aspect-ratio:16/10;overflow:hidden;background:#eee}
   .shotwrap img{width:100%;height:100%;object-fit:cover;object-position:top;transition:transform .3s}
@@ -58,6 +58,7 @@
   .empty{display:none;text-align:center;color:var(--sub);padding:60px 0;font-size:15px}
   footer{text-align:center;color:var(--sub);font-size:13px;margin-top:58px;line-height:1.7}
   footer a{color:var(--a-personal);text-decoration:none}
+  @media(max-width:640px){.featured{grid-template-columns:1fr}.fimg{min-height:185px}}
   @media(max-width:560px){.search{width:auto;flex:1}}
 </style>
 </head>
@@ -111,13 +112,18 @@ document.getElementById('pctstat').textContent = `${Math.round(SHIPPED/TARGET*10
 requestAnimationFrame(()=>{document.getElementById('progfill').style.width = (SHIPPED/TARGET*100)+'%';});
 
 // featured = most recently shipped app that isn't Launchpad itself
+const featEl = document.getElementById('featured');
 const featPool = DATA.filter(a=>a.slug!=='launchpad' && a.shot);
-const feat = featPool.reduce((m,a)=> a.days < m.days ? a : m, featPool[0]);
-document.getElementById('featured').href = feat.url;
-document.getElementById('featured').innerHTML =
-  `<img src="${feat.shot}" alt="${esc(feat.name)} screenshot">
-   <div class="fov"><div class="tag">Latest ship</div><h3>${esc(feat.name)}</h3>
-   <p>${esc(feat.desc)}</p><span class="fbtn">Open app →</span></div>`;
+if(featPool.length){
+  const feat = featPool.reduce((m,a)=> a.days < m.days ? a : m, featPool[0]);
+  featEl.href = feat.url;
+  featEl.innerHTML =
+    `<div class="fimg"><img src="${feat.shot}" alt="${esc(feat.name)} screenshot"></div>
+     <div class="fbody"><div class="tag">Latest ship · ${esc(feat.last)}</div><h3>${esc(feat.name)}</h3>
+     <p>${esc(feat.desc)}</p><span class="fbtn">Open app →</span></div>`;
+} else {
+  featEl.hidden = true;
+}
 
 // rails
 const railsEl = document.getElementById('rails');
@@ -126,7 +132,7 @@ railsEl.innerHTML = CATORDER.map(c=>{
   if(!items.length) return '';
   return `<section class="rail" data-cat="${c}"><div class="railhd"><h2>${CATLABEL[c]}</h2>
     <span class="count" style="color:${ACCENT[c]};background:${TINT[c]}">${items.length}</span></div>
-    <div class="track">${items.map(cardHTML).join('')}</div></section>`;
+    <div class="grid-cat">${items.map(cardHTML).join('')}</div></section>`;
 }).join('');
 
 // footer
