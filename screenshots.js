@@ -16,6 +16,41 @@ const MISSING_ONLY = process.argv.includes('--missing-only');
 const OUT = path.join(__dirname, 'screenshots', 'thumb');
 fs.mkdirSync(OUT, { recursive: true });
 
+// Per-app "get past the login/empty screen" recipes, so the captured thumbnail
+// shows a real in-app view instead of a sign-in form. Each runs after the page
+// loads and before the screenshot. Keep them defensive — a failed recipe just
+// falls back to whatever is on screen.
+const RECIPES = {
+  // GPM: the login validates password === selected role value (it even tells you
+  // "use the role name as the starter password"). Pick the first role and submit.
+  'gpm-asset-performance-pane': async (page) => {
+    await page.waitForSelector('#loginUser option', { timeout: 10000 }).catch(() => {});
+    await page.evaluate(() => {
+      const sel = document.querySelector('#loginUser');
+      if (!sel || !sel.options.length) return;
+      const role = (sel.value || sel.options[0].value);
+      sel.value = role;
+      const pw = document.querySelector('#loginPassword'); if (pw) pw.value = role;
+      const f = document.querySelector('#loginForm');
+      if (f) (f.requestSubmit ? f.requestSubmit() : f.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+    });
+    await page.waitForTimeout(1800);
+  },
+  // MeterIQ: ships demo users (Admin/111111 …). Call its own loginAs() with the
+  // seeded admin session to land on the populated dashboard.
+  'meteriq': async (page) => {
+    await page.waitForTimeout(600);
+    await page.evaluate(() => {
+      try {
+        if (typeof USERS === 'undefined' || typeof loginAs !== 'function') return;
+        const u = USERS.find(x => x && (x.pin === '111111' || /admin/i.test(x.name || '')));
+        if (u) loginAs(u);
+      } catch (e) {}
+    });
+    await page.waitForTimeout(1800);
+  },
+};
+
 (async () => {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1200, height: 750 }, deviceScaleFactor: 2 });
@@ -27,6 +62,10 @@ fs.mkdirSync(OUT, { recursive: true });
     try {
       await page.goto(a.url, { waitUntil: 'load', timeout: 45000 });
       await page.waitForTimeout(3000); // let charts / fonts settle
+      if (RECIPES[a.slug]) {
+        try { await RECIPES[a.slug](page); console.log('  · ran login recipe:', a.slug); }
+        catch (e) { console.warn('  · recipe failed:', a.slug, '-', e.message); }
+      }
       const grab = async (file) => {
         const buf = await page.screenshot(); // current viewport, 2400x1500 px at 2x DPI
         await sharp(buf).resize(800, 500, { fit: 'cover', position: 'top' }).jpeg({ quality: 80 }).toFile(path.join(OUT, file));
