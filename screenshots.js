@@ -47,7 +47,10 @@ const RECIPES = {
         if (typeof doLogin === 'function') doLogin();
       } catch (e) {}
     });
-    await page.waitForTimeout(2000);
+    // doLogin kicks off a backend sync ("Signing in…"); wait for it to finish or
+    // time out into offline mode, then for the dashboard to render.
+    await page.waitForSelector('#loginScreen', { state: 'hidden', timeout: 12000 }).catch(() => {});
+    await page.waitForTimeout(2500);
   },
 };
 
