@@ -36,18 +36,18 @@ const RECIPES = {
     });
     await page.waitForTimeout(1800);
   },
-  // MeterIQ: ships demo users (Admin/111111 …). Call its own loginAs() with the
-  // seeded admin session to land on the populated dashboard.
+  // MeterIQ: ships demo users (Admin/111111). Drive its own login: select the
+  // user, key the PIN via lpk(), then doLogin() to reach the populated dashboard.
   'meteriq': async (page) => {
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(800);
     await page.evaluate(() => {
       try {
-        if (typeof USERS === 'undefined' || typeof loginAs !== 'function') return;
-        const u = USERS.find(x => x && (x.pin === '111111' || /admin/i.test(x.name || '')));
-        if (u) loginAs(u);
+        if (typeof selectLoginUser === 'function') selectLoginUser('Admin');
+        if (typeof lpk === 'function') { for (const d of '111111') lpk(d); }
+        if (typeof doLogin === 'function') doLogin();
       } catch (e) {}
     });
-    await page.waitForTimeout(1800);
+    await page.waitForTimeout(2000);
   },
 };
 
