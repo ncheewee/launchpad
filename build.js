@@ -50,17 +50,42 @@ function relativeDays(days) {
   if (days === 1) return 'yesterday';
   return days + 'd ago';
 }
-function embedShot(slug) {
-  const p = path.join(__dirname, 'screenshots', 'thumb', slug + '.jpg');
-  if (!fs.existsSync(p)) { console.warn('  ! no screenshot yet for ' + slug + ' (the Action will capture it)'); return ''; }
-  return 'data:image/jpeg;base64,' + fs.readFileSync(p).toString('base64');
+function fileToB64(p) {
+  const ext = p.toLowerCase().endsWith('.png') ? 'png' : 'jpeg';
+  return 'data:image/' + ext + ';base64,' + fs.readFileSync(p).toString('base64');
+}
+// Card/featured hero (base64-inlined). A custom cover (screenshots/custom/<file>)
+// overrides the auto screenshot — use it for apps whose live page is a boring
+// login/empty screen.
+function heroFor(a) {
+  if (a.cover) {
+    const c = path.join(__dirname, 'screenshots', 'custom', a.cover);
+    if (fs.existsSync(c)) return fileToB64(c);
+    console.warn('  ! cover declared but missing for ' + a.slug + ': ' + a.cover);
+  }
+  const t = path.join(__dirname, 'screenshots', 'thumb', a.slug + '.jpg');
+  if (fs.existsSync(t)) return fileToB64(t);
+  console.warn('  ! no hero image yet for ' + a.slug + ' (the Action will capture it)');
+  return '';
+}
+// Modal carousel images, as relative URLs (NOT base64 — keeps index.html small;
+// loaded on demand when the preview opens). Order: cover, hero, extra frames.
+function galleryFor(a) {
+  const g = [];
+  const push = rel => { if (fs.existsSync(path.join(__dirname, rel))) g.push(rel); };
+  if (a.cover) push('screenshots/custom/' + a.cover);
+  push('screenshots/thumb/' + a.slug + '.jpg');
+  push('screenshots/thumb/' + a.slug + '-2.jpg');
+  push('screenshots/thumb/' + a.slug + '-3.jpg');
+  return g;
 }
 
 function build() {
   const data = APPS.map(a => {
     const days = daysSince(a.shipped);
     return { slug:a.slug, name:a.name, cat:a.cat, icon:a.icon, url:a.url,
-             desc:a.desc, days, last:relativeDays(days), shot:embedShot(a.slug) };
+             desc:a.desc, days, last:relativeDays(days),
+             shot:heroFor(a), gallery:galleryFor(a) };
   });
   const template = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
   const html = template.replace('__DATA_JSON__', JSON.stringify(data));

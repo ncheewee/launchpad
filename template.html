@@ -58,8 +58,35 @@
   .empty{display:none;text-align:center;color:var(--sub);padding:60px 0;font-size:15px}
   footer{text-align:center;color:var(--sub);font-size:13px;margin-top:58px;line-height:1.7}
   footer a{color:var(--a-personal);text-decoration:none}
+  .card{cursor:pointer}
+  /* preview modal */
+  .modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+  .modal[hidden]{display:none}
+  .mbackdrop{position:absolute;inset:0;background:rgba(15,17,24,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);animation:fade .2s ease}
+  .msheet{position:relative;width:min(680px,96vw);max-height:92vh;overflow:auto;background:var(--card);border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.4);animation:pop .22s cubic-bezier(.2,.8,.3,1)}
+  @keyframes fade{from{opacity:0}}@keyframes pop{from{opacity:0;transform:translateY(12px) scale(.985)}}
+  .mclose{position:absolute;top:12px;right:12px;z-index:3;width:34px;height:34px;border:none;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;font-size:19px;line-height:1;cursor:pointer;display:grid;place-items:center}
+  .mclose:hover{background:rgba(0,0,0,.7)}
+  .mcar{position:relative;background:#0b1020;aspect-ratio:16/10;overflow:hidden}
+  .mtrack{display:flex;height:100%;transition:transform .3s ease}
+  .mtrack img{min-width:100%;width:100%;height:100%;object-fit:cover;object-position:top;flex:none}
+  .mnav{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border:none;border-radius:50%;background:rgba(255,255,255,.88);color:#111;font-size:21px;cursor:pointer;display:grid;place-items:center}
+  .mnav:hover{background:#fff}.mprev{left:10px}.mnext{right:10px}
+  .mnav[disabled]{opacity:0;pointer-events:none}
+  .mdots{position:absolute;bottom:10px;left:0;right:0;display:flex;gap:6px;justify-content:center}
+  .mdots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45);transition:background .2s}
+  .mdots i.on{background:#fff}
+  .mcar.single .mnav,.mcar.single .mdots{display:none}
+  .mbody{padding:20px 22px 24px}
+  .mhd{display:flex;align-items:center;gap:12px;margin-bottom:13px}
+  .mic{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-size:23px;flex:none}
+  .mbody h3{font-size:22px;letter-spacing:-.02em}
+  .msub{font-size:13px;margin-top:2px;color:var(--sub)}
+  .mbody p{color:#3a3a3c;font-size:15px;line-height:1.6;margin-bottom:22px}
+  .mlaunch{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#7c6cff,#3b82f6);color:#fff;border-radius:99px;padding:13px 26px;font-weight:600;font-size:15px;text-decoration:none}
+  .mlaunch:hover{filter:brightness(1.06)}
   @media(max-width:640px){.featured{grid-template-columns:1fr}.fimg{min-height:185px}}
-  @media(max-width:560px){.search{width:auto;flex:1}}
+  @media(max-width:560px){.search{width:auto;flex:1}.mbody{padding:16px 18px 20px}}
 </style>
 </head>
 <body>
@@ -85,6 +112,24 @@
     <footer id="foot"></footer>
   </div>
 
+  <div class="modal" id="modal" hidden>
+    <div class="mbackdrop" data-close></div>
+    <div class="msheet" role="dialog" aria-modal="true" aria-labelledby="m-name">
+      <button class="mclose" data-close aria-label="Close preview">&times;</button>
+      <div class="mcar" id="m-car">
+        <div class="mtrack" id="m-track"></div>
+        <button class="mnav mprev" id="m-prev" aria-label="Previous screenshot">&#8249;</button>
+        <button class="mnav mnext" id="m-next" aria-label="Next screenshot">&#8250;</button>
+        <div class="mdots" id="m-dots"></div>
+      </div>
+      <div class="mbody">
+        <div class="mhd"><div class="mic" id="m-ic"></div><div><h3 id="m-name"></h3><div class="msub" id="m-sub"></div></div></div>
+        <p id="m-desc"></p>
+        <a class="mlaunch" id="m-launch" target="_blank" rel="noopener">Launch app <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+  </div>
+
 <script>
 const DATA = __DATA_JSON__;
 const CATLABEL = {Personal:'Personal', Fun:'Fun & experiments', Work:'Work'};
@@ -100,7 +145,7 @@ function cardHTML(a){
   const shot = a.shot
     ? `<img loading="lazy" src="${a.shot}" alt="${esc(a.name)} screenshot">`
     : `<div class="shotph" style="background:${TINT[a.cat]}"><span>${EMOJI[a.icon]||'📱'}</span></div>`;
-  return `<a class="card" href="${a.url}" target="_blank" rel="noopener" data-name="${esc(a.name).toLowerCase()}" data-desc="${esc(a.desc).toLowerCase()}">
+  return `<a class="card" href="${a.url}" target="_blank" rel="noopener" data-slug="${a.slug}" data-name="${esc(a.name).toLowerCase()}" data-desc="${esc(a.desc).toLowerCase()}">
     <div class="shotwrap">${shot}</div>
     <div class="meta"><div class="ic" style="background:${TINT[a.cat]}">${EMOJI[a.icon]||'📱'}</div>
     <div class="mtext"><div class="nm">${esc(a.name)}</div><div class="sub">shipped ${esc(a.last)}</div></div></div></a>`;
@@ -117,10 +162,11 @@ const featPool = DATA.filter(a=>a.slug!=='launchpad' && a.shot);
 if(featPool.length){
   const feat = featPool.reduce((m,a)=> a.days < m.days ? a : m, featPool[0]);
   featEl.href = feat.url;
+  featEl.dataset.slug = feat.slug;
   featEl.innerHTML =
     `<div class="fimg"><img src="${feat.shot}" alt="${esc(feat.name)} screenshot"></div>
      <div class="fbody"><div class="tag">Latest ship · ${esc(feat.last)}</div><h3>${esc(feat.name)}</h3>
-     <p>${esc(feat.desc)}</p><span class="fbtn">Open app →</span></div>`;
+     <p>${esc(feat.desc)}</p><span class="fbtn">View details →</span></div>`;
 } else {
   featEl.hidden = true;
 }
@@ -150,6 +196,56 @@ q.addEventListener('input', ()=>{
   const hits = DATA.filter(a => a.name.toLowerCase().includes(t) || a.desc.toLowerCase().includes(t) || CATLABEL[a.cat].toLowerCase().includes(t));
   results.innerHTML = hits.map(cardHTML).join('');
   empty.style.display = hits.length ? 'none' : 'block';
+});
+
+// ---- preview modal + carousel ----
+const BYSLUG = Object.fromEntries(DATA.map(a => [a.slug, a]));
+const modal = document.getElementById('modal'),
+      mTrack = document.getElementById('m-track'), mDots = document.getElementById('m-dots'),
+      mPrev = document.getElementById('m-prev'), mNext = document.getElementById('m-next'),
+      mCar = document.getElementById('m-car');
+let mImgs = [], mIdx = 0;
+function galleryOf(a){
+  const g = (a.gallery && a.gallery.length) ? a.gallery.slice() : [];
+  if(!g.length && a.shot) g.push(a.shot);
+  return g;
+}
+function renderCar(){
+  mTrack.style.transform = `translateX(${-mIdx*100}%)`;
+  [...mDots.children].forEach((d,i)=> d.classList.toggle('on', i===mIdx));
+  mPrev.disabled = mIdx===0; mNext.disabled = mIdx===mImgs.length-1;
+}
+function openModal(slug){
+  const a = BYSLUG[slug]; if(!a) return;
+  mImgs = galleryOf(a); mIdx = 0;
+  mTrack.innerHTML = mImgs.length
+    ? mImgs.map(src => `<img src="${src}" alt="${esc(a.name)} screenshot">`).join('')
+    : `<div style="display:grid;place-items:center;width:100%;color:#8b90a3;font-size:46px">${EMOJI[a.icon]||'📱'}</div>`;
+  mDots.innerHTML = mImgs.map(()=> '<i></i>').join('');
+  mCar.classList.toggle('single', mImgs.length<=1);
+  const ic = document.getElementById('m-ic');
+  ic.textContent = EMOJI[a.icon]||'📱'; ic.style.background = TINT[a.cat];
+  document.getElementById('m-name').textContent = a.name;
+  document.getElementById('m-sub').innerHTML = `<span style="color:${ACCENT[a.cat]};font-weight:600">${CATLABEL[a.cat]}</span> &middot; shipped ${esc(a.last)}`;
+  document.getElementById('m-desc').textContent = a.desc;
+  document.getElementById('m-launch').href = a.url;
+  renderCar();
+  modal.hidden = false; document.body.style.overflow = 'hidden';
+}
+function closeModal(){ modal.hidden = true; document.body.style.overflow = ''; }
+mPrev.onclick = ()=>{ if(mIdx>0){ mIdx--; renderCar(); } };
+mNext.onclick = ()=>{ if(mIdx<mImgs.length-1){ mIdx++; renderCar(); } };
+modal.addEventListener('click', e=>{ if(e.target.dataset.close !== undefined) closeModal(); });
+document.addEventListener('keydown', e=>{
+  if(modal.hidden) return;
+  if(e.key==='Escape') closeModal();
+  else if(e.key==='ArrowLeft') mPrev.onclick();
+  else if(e.key==='ArrowRight') mNext.onclick();
+});
+// first click on any card / featured opens the preview instead of launching
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-slug]');
+  if(el){ e.preventDefault(); openModal(el.dataset.slug); }
 });
 </script>
 </body>
