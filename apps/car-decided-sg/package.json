@@ -1,0 +1,11 @@
+{
+  "name": "car-decided-sg",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "validate:data": "node scripts/validate-data.mjs",
+    "check": "npm run validate:data && npm test"
+  }
+}

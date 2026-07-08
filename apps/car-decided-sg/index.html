@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A source-stamped Singapore new-car recommender with preference matching and editable 10-year TCO.">
+  <meta name="theme-color" content="#080a0d">
+  <title>Car, Decided. — Singapore car recommender</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="rail" aria-label="App shortcuts">
+      <a class="logo" href="#" aria-label="Car, Decided home">C<span>//</span>D</a>
+      <div class="rail-line"></div>
+      <span class="rail-index">SG</span>
+      <span class="rail-index">10Y</span>
+      <div class="rail-spacer"></div>
+      <button class="rail-help" id="about-btn" aria-label="About this app">?</button>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <a class="wordmark" href="#">CAR<span>//</span>DECIDED</a>
+        <nav class="tabs desktop-tabs" aria-label="App sections">
+          <button class="active" data-view="fit"><span>01</span> Your fit</button>
+          <button data-view="match"><span>02</span> Match</button>
+          <button data-view="compare"><span>03</span> Compare</button>
+          <button data-view="evidence"><span>04</span> Evidence</button>
+        </nav>
+        <div class="data-status"><i></i><span>Snapshot 08 Jul 2026</span></div>
+        <button class="reset-btn" id="reset-btn">Reset</button>
+      </header>
+
+      <nav class="tabs mobile-tabs" aria-label="Mobile app sections">
+        <button class="active" data-view="fit"><span>01</span> Your fit</button>
+        <button data-view="match"><span>02</span> Match</button>
+        <button data-view="compare"><span>03</span> Compare</button>
+        <button data-view="evidence"><span>04</span> Evidence</button>
+      </nav>
+
+      <section class="view active" id="view-fit" aria-labelledby="fit-title">
+        <div class="view-pad">
+          <div class="eyebrow">Preference engine · no login · saved on this device</div>
+          <div class="fit-intro">
+            <div><h1 id="fit-title">Build your<br><span>driving signal.</span></h1><p>Tell us what your next ten years look like. The result optimises for your life, then shows its working.</p></div>
+            <div class="coverage"><strong id="coverage-count">9</strong><span>new Singapore SUVs<br>in this v1 snapshot</span></div>
+          </div>
+
+          <div class="fit-grid">
+            <section class="panel profile-panel">
+              <header class="panel-head"><div><span>01</span><h2>Your real life</h2></div><small>Decision constraints</small></header>
+              <div class="profile-fields">
+                <label class="field"><span>Annual driving <output id="annual-km-output">20,000 km</output></span><input id="annual-km" type="range" min="5000" max="40000" step="1000" value="20000"></label>
+                <label class="field"><span>People usually aboard <output id="passengers-output">4 adults</output></span><input id="passengers" type="range" min="1" max="7" step="1" value="4"></label>
+                <label class="field"><span>Maximum purchase price <output id="budget-output">S$240,000</output></span><input id="budget" type="range" min="170000" max="330000" step="5000" value="240000"></label>
+                <label class="field"><span>Comfort with newer brands <output id="risk-output">Balanced</output></span><input id="risk" type="range" min="0" max="100" step="5" value="55"></label>
+                <fieldset class="choice-field"><legend>Powertrain</legend><div class="segmented" id="powertrain-options"><button type="button" class="active" data-value="Open">Open</button><button type="button" data-value="EV">EV</button><button type="button" data-value="Hybrid">Hybrid</button><button type="button" data-value="Petrol">Petrol</button></div></fieldset>
+                <label class="switch-row"><span><b>Home charging available</b><small>EVs receive no charging-access penalty</small></span><input id="home-charging" type="checkbox" checked><i></i></label>
+              </div>
+            </section>
+
+            <section class="panel weights-panel">
+              <header class="panel-head"><div><span>02</span><h2>What deserves your money?</h2></div><small>Adjustable priorities</small></header>
+              <p class="panel-note">These weights shape the recommendation—not merely the order of a table.</p>
+              <div id="weights-list" class="weights-list"></div>
+            </section>
+
+            <aside class="signal-panel">
+              <div class="radar-wrap"><div class="radar"><span>TECH<br>SUV</span></div><div class="pulse"></div></div>
+              <div class="signal-summary" id="signal-summary"></div>
+              <button class="primary-action" id="run-match">Run the match <span>→</span></button>
+              <p>Recommendation logic is deterministic and inspectable. No hidden AI opinion.</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-match" aria-labelledby="match-title">
+        <div class="view-pad">
+          <div class="eyebrow">Recommendation · based on your saved assumptions</div>
+          <div class="match-heading"><div><h1 id="match-title">One answer.<br><span>No hedging.</span></h1><p id="match-summary"></p></div><button class="outline-btn" data-jump="fit">Tune priorities</button></div>
+          <div id="winner-region"></div>
+          <div class="alternatives-head"><h2>Two useful alternatives</h2><span>Not consolation prizes—different trade-offs.</span></div>
+          <div class="alternatives" id="alternatives-region"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-compare" aria-labelledby="compare-title">
+        <div class="view-pad">
+          <div class="eyebrow">Comparison bay · up to four cars</div>
+          <div class="compare-heading"><div><h1 id="compare-title">Compare your<br><span>actual numbers.</span></h1><p>Override purchase price, tax, insurance, maintenance or residual value. Every result recalculates immediately.</p></div><div class="compare-actions"><select id="add-car-select" aria-label="Choose car to add"></select><button id="add-car-btn" class="outline-btn">Add car</button></div></div>
+          <div class="compare-scroll"><div class="compare-grid" id="compare-grid"></div></div>
+          <section class="assumptions-panel">
+            <header><div><span class="section-no">Shared assumptions</span><h2>Your cost model</h2></div><button class="text-btn" id="reset-overrides">Reset car overrides</button></header>
+            <div class="assumption-grid">
+              <label><span>Electricity / kWh</span><div><b>S$</b><input id="electricity-price" type="number" min="0" step="0.01"></div></label>
+              <label><span>Petrol / litre</span><div><b>S$</b><input id="petrol-price" type="number" min="0" step="0.01"></div></label>
+              <label><span>Loan amount</span><div><input id="loan-percent" type="number" min="0" max="100" step="5"><b>%</b></div></label>
+              <label><span>Flat interest / year</span><div><input id="loan-rate" type="number" min="0" step="0.01"><b>%</b></div></label>
+              <label><span>Loan tenure</span><div><input id="loan-years" type="number" min="0" max="10" step="1"><b>yr</b></div></label>
+              <label><span>Parking / month</span><div><b>S$</b><input id="parking-monthly" type="number" min="0" step="10"></div></label>
+              <label><span>ERP / year</span><div><b>S$</b><input id="erp-annual" type="number" min="0" step="50"></div></label>
+              <label><span>Home charger once-off</span><div><b>S$</b><input id="charger-cost" type="number" min="0" step="100"></div></label>
+            </div>
+            <p class="formula-note">TCO = purchase + flat-rate financing + energy + road tax + insurance + maintenance + repair reserve + optional shared costs − estimated end value.</p>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-evidence" aria-labelledby="evidence-title">
+        <div class="view-pad">
+          <div class="eyebrow">Trust layer · facts are not sentiment</div>
+          <div class="evidence-heading"><div><h1 id="evidence-title">See what the<br><span>engine saw.</span></h1><p>Official rules and specifications outrank market listings. Owner discussions become visible themes and caveats—not invented facts.</p></div><div class="trust-score"><strong>3</strong><span>evidence<br>layers</span></div></div>
+          <div class="evidence-legend"><span><i class="official-dot"></i>Official</span><span><i class="market-dot"></i>Dealer / market</span><span><i class="social-dot"></i>Owner signal</span></div>
+          <div id="global-evidence" class="global-evidence"></div>
+          <div class="evidence-car-head"><h2>Vehicle evidence</h2><select id="evidence-car-select" aria-label="Choose vehicle evidence"></select></div>
+          <div id="car-evidence" class="car-evidence"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="override-dialog">
+    <form method="dialog" class="dialog-card" id="override-form">
+      <header><div><span>Editable car assumptions</span><h2 id="override-title">Car</h2></div><button type="button" data-close-override aria-label="Close">×</button></header>
+      <div class="dialog-grid">
+        <label>Purchase price <span>S$</span><input name="price" type="number" min="0" step="100"></label>
+        <label>Annual road tax <span>S$</span><input name="roadTaxAnnual" type="number" min="0" step="10"></label>
+        <label>Annual insurance <span>S$</span><input name="insuranceAnnual" type="number" min="0" step="50"></label>
+        <label>Annual maintenance <span>S$</span><input name="maintenanceAnnual" type="number" min="0" step="50"></label>
+        <label>Annual repair reserve <span>S$</span><input name="repairReserveAnnual" type="number" min="0" step="50"></label>
+        <label>End-of-year-10 value <span>S$</span><input name="residualValue" type="number" min="0" step="100"></label>
+      </div>
+      <p>Overrides are saved only in this browser. Source values remain available through Reset.</p>
+      <footer><button type="button" data-close-override class="text-btn">Cancel</button><button type="button" id="save-override" class="primary-action">Save & recalculate</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="about-dialog">
+    <form method="dialog" class="dialog-card about-card">
+      <header><div><span>About the model</span><h2>Useful, not omniscient.</h2></div><button value="cancel" aria-label="Close">×</button></header>
+      <p>This v1 covers a representative set of new Singapore SUVs. It is a decision aid, not a dealer quotation or financial recommendation. Price packages change quickly; verify the shortlisted cars with dealers before committing.</p>
+      <p>Scoring is deterministic. Your weights combine structured quality estimates, fit constraints and calculated TCO. Social evidence is kept separate and never silently changes a factual specification.</p>
+      <footer><button value="cancel" class="primary-action">Got it</button></footer>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
