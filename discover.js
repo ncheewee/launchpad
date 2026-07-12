@@ -1,95 +1,108 @@
 #!/usr/bin/env node
 /*
- * Auto-discovery: finds GitHub Pages repos under the owner that are NOT yet in
- * the Launchpad manifest (build.js APPS) and opens/updates a single tracking
- * issue listing them. Runs weekly via .github/workflows/discover.yml.
+ * Launchpad auto-add + archive.
  *
- * This does NOT add apps automatically — category, icon and blurb are human
- * choices. It just makes sure a new repo never goes silently missing again.
+ *   node discover.js --apply           Scan the owner's GitHub Pages repos and append any
+ *                                       not yet listed to build.js APPS (category "New").
+ *   node discover.js --archive <slug>  Remove <slug> from APPS, add it to archive.json,
+ *                                       and delete its screenshots — so it is NOT auto-added again.
+ *
+ * archive.json is the block-list: tooling, duplicate repos, and apps you've removed.
+ * Auto-added apps land in the "New" category with the repo description as their blurb —
+ * refine category / icon / name / desc by editing the entry in build.js afterwards.
  */
+const fs = require('fs');
+const path = require('path');
 const { APPS } = require('./build.js');
 
 const OWNER = 'ncheewee';
-const REPO = 'launchpad';
-const TOKEN = process.env.GITHUB_TOKEN;
-const ISSUE_TITLE = '🔎 Unlisted app repos (add to Launchpad?)';
+const BUILD = path.join(__dirname, 'build.js');
+const ARCHIVE = path.join(__dirname, 'archive.json');
+const THUMBS = path.join(__dirname, 'screenshots', 'thumb');
 
-// Repos to never nag about: tooling, backends, dupes, and things deliberately
-// left out. Edit this list as your repo collection grows.
-const IGNORE = new Set([
-  'launchpad',
-  'deployer',            // MetrIQ deploy tooling, not an app
-  'metriq-v16',          // dupe of MeterIQ
-  'metriq',              // dupe of MeterIQ
-  'ippt-tracker-gist',   // variant of ippt-tracker
-  'initiatives-report',  // intentionally not listed
-].map(s => s.toLowerCase()));
-
-async function gh(path, opts = {}) {
-  const res = await fetch('https://api.github.com' + path, {
-    headers: {
-      Authorization: 'Bearer ' + TOKEN,
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'launchpad-discover',
-    },
-    ...opts,
-  });
-  if (!res.ok) throw new Error(`${opts.method || 'GET'} ${path} -> ${res.status} ${await res.text()}`);
-  return res.status === 204 ? null : res.json();
+function readArchive() {
+  try { return JSON.parse(fs.readFileSync(ARCHIVE, 'utf8')); } catch { return []; }
+}
+function writeArchive(list) {
+  const uniq = [...new Set(list.map(s => s.toLowerCase()))].sort();
+  fs.writeFileSync(ARCHIVE, JSON.stringify(uniq, null, 2) + '\n');
+}
+function jsStr(s) { return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\s+/g, ' ').trim(); }
+function prettyName(slug) { return slug.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
+function entryLine(a) {
+  return `  { slug:'${a.slug}', name:'${jsStr(a.name)}', cat:'${a.cat}', icon:'${a.icon}', url:'${a.url}', shipped:'${a.shipped}', desc:'${jsStr(a.desc)}' },`;
 }
 
-(async () => {
-  const listed = new Set(APPS.map(a => a.slug.toLowerCase()));
+async function gh(p) {
+  const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'launchpad-discover' };
+  if (process.env.GITHUB_TOKEN) headers.Authorization = 'Bearer ' + process.env.GITHUB_TOKEN;
+  const res = await fetch('https://api.github.com' + p, { headers });
+  if (!res.ok) throw new Error(`GET ${p} -> ${res.status} ${await res.text()}`);
+  return res.json();
+}
 
-  // all public repos with Pages enabled
+async function apply() {
+  const listed = new Set(APPS.map(a => a.slug.toLowerCase()));
+  const archived = new Set(readArchive().map(s => s.toLowerCase()));
   const repos = [];
   for (let page = 1; page <= 5; page++) {
     const batch = await gh(`/users/${OWNER}/repos?per_page=100&page=${page}&sort=created&direction=desc`);
     repos.push(...batch);
     if (batch.length < 100) break;
   }
-  const missing = repos.filter(r =>
+  const fresh = repos.filter(r =>
     r.has_pages &&
     !listed.has(r.name.toLowerCase()) &&
-    !IGNORE.has(r.name.toLowerCase())
+    !archived.has(r.name.toLowerCase())
   );
+  if (!fresh.length) { console.log('Auto-add: nothing new to add.'); return; }
 
-  // find an existing tracking issue
-  const issues = await gh(`/repos/${OWNER}/${REPO}/issues?state=all&per_page=100`);
-  const existing = issues.find(i => i.title === ISSUE_TITLE && !i.pull_request);
+  let src = fs.readFileSync(BUILD, 'utf8');
+  const anchor = src.split('\n').find(l => /slug:'launchpad'/.test(l)); // keep Launchpad last
+  if (!anchor) throw new Error('Could not find the launchpad anchor line in build.js');
 
-  if (!missing.length) {
-    console.log('No unlisted Pages repos. 🎉');
-    if (existing && existing.state === 'open') {
-      await gh(`/repos/${OWNER}/${REPO}/issues/${existing.number}`, {
-        method: 'PATCH', body: JSON.stringify({ state: 'closed' }),
-      });
-      console.log('Closed stale tracking issue #' + existing.number);
-    }
-    return;
+  const lines = fresh.map(r => entryLine({
+    slug: r.name.toLowerCase(),
+    name: prettyName(r.name),
+    cat: 'New',
+    icon: 'sparkles',
+    url: (r.homepage && /github\.io/.test(r.homepage)) ? r.homepage : `https://${OWNER}.github.io/${r.name}/`,
+    shipped: (r.created_at || '').slice(0, 10),
+    desc: r.description || '',
+  }));
+  src = src.replace(anchor, lines.join('\n') + '\n' + anchor);
+  fs.writeFileSync(BUILD, src);
+  console.log('Auto-added (category "New"):', fresh.map(r => r.name).join(', '));
+}
+
+function archiveSlug(raw) {
+  const slug = raw.toLowerCase();
+  let lines = fs.readFileSync(BUILD, 'utf8').split('\n');
+  const before = lines.length;
+  const re = new RegExp(`^\\s*\\{\\s*slug:'${slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`);
+  lines = lines.filter(l => !re.test(l));
+  fs.writeFileSync(BUILD, lines.join('\n'));
+
+  const arch = readArchive(); arch.push(slug); writeArchive(arch);
+
+  let removedThumbs = 0;
+  for (const f of [`${slug}.jpg`, `${slug}-2.jpg`, `${slug}-3.jpg`]) {
+    const p = path.join(THUMBS, f);
+    if (fs.existsSync(p)) { fs.unlinkSync(p); removedThumbs++; }
   }
+  const removedLine = before - lines.length;
+  console.log(`Archived '${slug}': removed ${removedLine} manifest entr${removedLine === 1 ? 'y' : 'ies'}, ` +
+    `${removedThumbs} screenshot(s), and added to archive.json (won't auto-add again).`);
+  if (removedLine === 0) console.warn(`  note: '${slug}' was not in APPS — added to archive.json anyway.`);
+}
 
-  const rows = missing.map(r =>
-    `- **${r.name}** — ${r.description || '_(no description)_'}\n  ` +
-    `<https://${OWNER}.github.io/${r.name}/> · created ${r.created_at.slice(0, 10)}`
-  ).join('\n');
-
-  const body =
-    `These GitHub Pages repos aren't in Launchpad's \`build.js\` \`APPS\` yet:\n\n${rows}\n\n` +
-    `---\n**To add one:** append an entry to \`APPS\` in \`build.js\` ` +
-    `(\`slug, name, cat, icon, url, shipped, desc\`), then push — the build Action screenshots it and rebuilds.\n` +
-    `**To silence one:** add its slug to the \`IGNORE\` list in \`discover.js\`.\n\n` +
-    `_Auto-generated ${new Date().toISOString().slice(0, 10)} by discover.js._`;
-
-  if (existing) {
-    await gh(`/repos/${OWNER}/${REPO}/issues/${existing.number}`, {
-      method: 'PATCH', body: JSON.stringify({ body, state: 'open' }),
-    });
-    console.log(`Updated tracking issue #${existing.number} (${missing.length} unlisted).`);
-  } else {
-    const created = await gh(`/repos/${OWNER}/${REPO}/issues`, {
-      method: 'POST', body: JSON.stringify({ title: ISSUE_TITLE, body }),
-    });
-    console.log(`Opened tracking issue #${created.number} (${missing.length} unlisted).`);
-  }
-})().catch(e => { console.error(e.message); process.exit(1); });
+const mode = process.argv[2];
+if (mode === '--archive') {
+  const slug = (process.argv[3] || '').trim();
+  if (!slug) { console.error('usage: node discover.js --archive <slug>'); process.exit(1); }
+  archiveSlug(slug);
+} else if (mode === '--apply' || !mode) {
+  apply().catch(e => { console.error(e.message); process.exit(1); });
+} else {
+  console.error('unknown mode. use --apply or --archive <slug>'); process.exit(1);
+}

@@ -8,7 +8,7 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   :root{--bg:#f5f5f7;--card:#fff;--ink:#1d1d1f;--sub:#86868b;--line:#e3e3e6;
-        --a-personal:#7c6cff;--a-proptechip:#16b8a6;--a-fun:#f5a524;--a-work:#3b82f6}
+        --a-personal:#7c6cff;--a-proptechip:#16b8a6;--a-fun:#f5a524;--a-work:#3b82f6;--a-new:#8a8f98}
   html{scroll-behavior:smooth}
   body{font-family:-apple-system,"SF Pro Display",Inter,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
   a{color:inherit}
@@ -132,11 +132,11 @@
 
 <script>
 const DATA = __DATA_JSON__;
-const CATLABEL = {Personal:'Personal', Fun:'Fun & experiments', Work:'Work'};
-const CATORDER = ['Personal','Fun','Work'];
-const ACCENT = {Personal:'var(--a-personal)', Fun:'var(--a-fun)', Work:'var(--a-work)'};
-const TINT   = {Personal:'#efedfe', Fun:'#fdf0d9', Work:'#e4eefc'};
-const EMOJI  = {receipt:'🧾',idea:'💡',bolt:'⚡',clipboard:'📋',gauge:'🎛️',ball:'⚽',trend:'📈',box:'🧩',building:'🏢',tower:'🗼',message:'💬',rocket:'🚀',car:'🚗',run:'🏃',map:'🗺️'};
+const CATLABEL = {Personal:'Personal', Fun:'Fun & experiments', Work:'Work', New:'New / uncategorised'};
+const CATORDER = ['Personal','Fun','Work','New'];
+const ACCENT = {Personal:'var(--a-personal)', Fun:'var(--a-fun)', Work:'var(--a-work)', New:'var(--a-new)'};
+const TINT   = {Personal:'#efedfe', Fun:'#fdf0d9', Work:'#e4eefc', New:'#eceef1'};
+const EMOJI  = {receipt:'🧾',idea:'💡',bolt:'⚡',clipboard:'📋',gauge:'🎛️',ball:'⚽',trend:'📈',box:'🧩',building:'🏢',tower:'🗼',message:'💬',rocket:'🚀',car:'🚗',run:'🏃',map:'🗺️',sparkles:'✨'};
 const TARGET = 100;
 const SHIPPED = DATA.length;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));

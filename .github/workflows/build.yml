@@ -7,10 +7,17 @@ on:
       - build.js
       - template.html
       - screenshots.js
+      - discover.js
+      - archive.json
       - .github/workflows/build.yml
   workflow_dispatch:        # manual "Run workflow" button
+    inputs:
+      archive:
+        description: 'Slug to archive & remove (blank = normal build + auto-add)'
+        required: false
+        default: ''
   schedule:
-    - cron: '0 22 * * *'    # daily 22:00 UTC = 06:00 Singapore — refreshes "days ago" + new screenshots
+    - cron: '0 22 * * *'    # daily 22:00 UTC = 06:00 Singapore — auto-add + refresh
 
 permissions:
   contents: write
@@ -35,9 +42,21 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
+      - name: Auto-add new repos (or archive one)
+        # With an "archive" input: remove that app + block it from re-adding.
+        # Otherwise: scan Pages repos and append any not yet listed (category "New").
+        run: |
+          if [ -n "${{ github.event.inputs.archive }}" ]; then
+            node discover.js --archive "${{ github.event.inputs.archive }}"
+          else
+            node discover.js --apply
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Capture screenshots
-        # On the daily cron, only screenshot apps that don't have one yet (keeps history quiet).
-        # On push / manual run, re-capture everything so edits are reflected.
+        # On the daily cron, only screenshot apps that don't have one yet (keeps history quiet
+        # but still captures freshly auto-added apps). On push / manual run, re-capture everything.
         run: node screenshots.js ${{ github.event_name == 'schedule' && '--missing-only' || '' }}
 
       - name: Rebuild index.html
@@ -47,7 +66,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add index.html screenshots/thumb
+          git add build.js archive.json index.html screenshots/thumb
           if git diff --cached --quiet; then
             echo "Nothing changed."
             exit 0
