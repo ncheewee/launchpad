@@ -8,7 +8,7 @@ on:
       - template.html
       - screenshots.js
       - discover.js
-      - archive.json
+      - overrides.json
       - .github/workflows/build.yml
   workflow_dispatch:        # manual "Run workflow" button
     inputs:
@@ -66,7 +66,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add build.js archive.json index.html screenshots/thumb
+          git add build.js overrides.json index.html screenshots/thumb
           if git diff --cached --quiet; then
             echo "Nothing changed."
             exit 0

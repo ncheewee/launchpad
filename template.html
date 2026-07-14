@@ -85,17 +85,52 @@
   .mbody p{color:#3a3a3c;font-size:15px;line-height:1.6;margin-bottom:22px}
   .mlaunch{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#7c6cff,#3b82f6);color:#fff;border-radius:99px;padding:13px 26px;font-weight:600;font-size:15px;text-decoration:none}
   .mlaunch:hover{filter:brightness(1.06)}
+  /* manage mode */
+  .mgbtn{background:none;border:1px solid var(--line);border-radius:9px;padding:8px 13px;font-size:13.5px;font-weight:600;color:var(--sub);cursor:pointer;flex:none}
+  .mgbtn:hover{color:var(--ink);border-color:var(--sub)}
+  body.manage .mgbtn{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .mgbar{display:none;gap:10px 14px;align-items:center;flex-wrap:wrap;margin:18px 0 0;padding:12px 15px;background:#fff;border:1px solid var(--line);border-radius:14px;font-size:13.5px}
+  body.manage .mgbar{display:flex}
+  .mgbar .st{color:var(--sub)}
+  .mgbar .dot2{width:8px;height:8px;border-radius:50%;background:#c0392b;display:inline-block;margin-right:6px;vertical-align:1px}
+  .mgbar .dot2.ok{background:#16a34a}
+  .mgbar button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 14px;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--ink)}
+  .mgbar button.pub{background:linear-gradient(135deg,#7c6cff,#3b82f6);color:#fff;border:none}
+  .mgbar button.pub:disabled{opacity:.45;cursor:default}
+  .mgbar .msg{margin-left:auto}
+  .cardwrap{position:relative}
+  .mctl{display:none;gap:8px;align-items:center;padding:0 13px 12px}
+  body.manage .mctl{display:flex}
+  .mctl select{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12.5px;background:#fff;color:var(--ink)}
+  .mctl .marchv{border:1px solid var(--line);background:#fff;color:#c0392b;border-radius:8px;padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer;flex:none}
+  .mctl .marchv:hover{background:#fdecea;border-color:#e6b0aa}
+  #archived{display:none;margin-top:42px}
+  body.manage #archived.has{display:block}
+  #archived h2{font-size:20px;letter-spacing:-.02em;margin-bottom:14px;color:var(--sub)}
+  .arow{display:flex;align-items:center;gap:11px;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
+  .arow .ic{width:32px;height:32px;font-size:16px}
+  .arow .anm{font-weight:600;font-size:14px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .arow .aslug{color:var(--sub);font-size:12px}
+  .arow button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;color:#2563eb}
+  .arow button:hover{background:#eff5ff;border-color:#bcd4f6}
   @media(max-width:640px){.featured{grid-template-columns:1fr}.fimg{min-height:185px}}
-  @media(max-width:560px){.search{width:auto;flex:1}.mbody{padding:16px 18px 20px}}
+  @media(max-width:560px){.search{width:auto;flex:1}.mbody{padding:16px 18px 20px}.mgbar .msg{margin-left:0}}
 </style>
 </head>
 <body>
   <header class="top"><div class="topin">
     <a class="brand" href="#"><span class="dot">🚀</span>Launchpad</a>
     <input class="search" id="q" type="search" placeholder="Search apps" aria-label="Search apps" autocomplete="off">
+    <button class="mgbtn" id="mgbtn" title="Manage categories &amp; archive">Manage</button>
   </div></header>
 
   <div class="wrap">
+    <div class="mgbar" id="mgbar">
+      <span class="st"><span class="dot2" id="tokdot"></span><span id="tokstat">Not connected</span></span>
+      <button id="tokbtn">Connect GitHub</button>
+      <button class="pub" id="pubbtn" disabled>Publish changes</button>
+      <span class="st msg" id="mgmsg">Set a category or archive apps below, then publish.</span>
+    </div>
     <section class="hero" id="hero">
       <div class="eyebrow">The 100 Apps Project</div>
       <h1 class="h1">A personal app store,<br>one idea at a time.</h1>
@@ -108,6 +143,7 @@
     <div id="rails"></div>
     <div id="results" class="results" hidden></div>
     <div class="empty" id="empty">No apps match your search.</div>
+    <section id="archived"></section>
 
     <footer id="foot"></footer>
   </div>
@@ -132,6 +168,9 @@
 
 <script>
 const DATA = __DATA_JSON__;
+const OVERRIDES = __OVERRIDES_JSON__;
+// working copy of overrides edited by the Manage panel; published as overrides.json
+const work = { archived: [...(OVERRIDES.archived||[])], category: {...(OVERRIDES.category||{})} };
 const CATLABEL = {Personal:'Personal', Fun:'Fun & experiments', Work:'Work', New:'New / uncategorised'};
 const CATORDER = ['Personal','Fun','Work','New'];
 const ACCENT = {Personal:'var(--a-personal)', Fun:'var(--a-fun)', Work:'var(--a-work)', New:'var(--a-new)'};
@@ -145,10 +184,15 @@ function cardHTML(a){
   const shot = a.shot
     ? `<img loading="lazy" src="${a.shot}" alt="${esc(a.name)} screenshot">`
     : `<div class="shotph" style="background:${TINT[a.cat]}"><span>${EMOJI[a.icon]||'📱'}</span></div>`;
-  return `<a class="card" href="${a.url}" target="_blank" rel="noopener" data-slug="${a.slug}" data-name="${esc(a.name).toLowerCase()}" data-desc="${esc(a.desc).toLowerCase()}">
+  const link = `<a class="card" href="${a.url}" target="_blank" rel="noopener" data-slug="${a.slug}" data-name="${esc(a.name).toLowerCase()}" data-desc="${esc(a.desc).toLowerCase()}">
     <div class="shotwrap">${shot}</div>
     <div class="meta"><div class="ic" style="background:${TINT[a.cat]}">${EMOJI[a.icon]||'📱'}</div>
     <div class="mtext"><div class="nm">${esc(a.name)}</div><div class="sub">shipped ${esc(a.last)}</div></div></div></a>`;
+  const ctl = `<div class="mctl">
+      <select class="mcat" data-slug="${a.slug}" aria-label="Category for ${esc(a.name)}">${CATORDER.map(c=>`<option value="${c}"${c===a.cat?' selected':''}>${CATLABEL[c]}</option>`).join('')}</select>
+      <button class="marchv" data-slug="${a.slug}" title="Archive ${esc(a.name)}">Archive</button>
+    </div>`;
+  return `<div class="cardwrap">${link}${ctl}</div>`;
 }
 
 // progress
@@ -158,7 +202,7 @@ requestAnimationFrame(()=>{document.getElementById('progfill').style.width = (SH
 
 // featured = most recently shipped app that isn't Launchpad itself
 const featEl = document.getElementById('featured');
-const featPool = DATA.filter(a=>a.slug!=='launchpad' && a.shot);
+const featPool = DATA.filter(a=>a.slug!=='launchpad' && a.shot && !a.archived);
 if(featPool.length){
   const feat = featPool.reduce((m,a)=> a.days < m.days ? a : m, featPool[0]);
   featEl.href = feat.url;
@@ -171,15 +215,18 @@ if(featPool.length){
   featEl.hidden = true;
 }
 
-// rails
+// rails (re-runnable so Manage edits reflect live)
 const railsEl = document.getElementById('rails');
-railsEl.innerHTML = CATORDER.map(c=>{
-  const items = DATA.filter(a=>a.cat===c);
-  if(!items.length) return '';
-  return `<section class="rail" data-cat="${c}"><div class="railhd"><h2>${CATLABEL[c]}</h2>
-    <span class="count" style="color:${ACCENT[c]};background:${TINT[c]}">${items.length}</span></div>
-    <div class="grid-cat">${items.map(cardHTML).join('')}</div></section>`;
-}).join('');
+function renderGrids(){
+  railsEl.innerHTML = CATORDER.map(c=>{
+    const items = DATA.filter(a=>a.cat===c && !a.archived);
+    if(!items.length) return '';
+    return `<section class="rail" data-cat="${c}"><div class="railhd"><h2>${CATLABEL[c]}</h2>
+      <span class="count" style="color:${ACCENT[c]};background:${TINT[c]}">${items.length}</span></div>
+      <div class="grid-cat">${items.map(cardHTML).join('')}</div></section>`;
+  }).join('');
+}
+renderGrids();
 
 // footer
 document.getElementById('foot').innerHTML =
@@ -193,7 +240,7 @@ q.addEventListener('input', ()=>{
   const t = q.value.trim().toLowerCase();
   if(!t){ hero.hidden=false; featured.hidden=false; railsEl.hidden=false; results.hidden=true; empty.style.display='none'; return; }
   hero.hidden=true; featured.hidden=true; railsEl.hidden=true; results.hidden=false;
-  const hits = DATA.filter(a => a.name.toLowerCase().includes(t) || a.desc.toLowerCase().includes(t) || CATLABEL[a.cat].toLowerCase().includes(t));
+  const hits = DATA.filter(a => !a.archived && (a.name.toLowerCase().includes(t) || a.desc.toLowerCase().includes(t) || CATLABEL[a.cat].toLowerCase().includes(t)));
   results.innerHTML = hits.map(cardHTML).join('');
   empty.style.display = hits.length ? 'none' : 'block';
 });
@@ -244,9 +291,95 @@ document.addEventListener('keydown', e=>{
 });
 // first click on any card / featured opens the preview instead of launching
 document.addEventListener('click', e=>{
-  const el = e.target.closest('[data-slug]');
+  if(e.target.closest('.mctl')) return; // manage controls handle their own clicks
+  const el = e.target.closest('a[data-slug], .featured[data-slug]');
   if(el){ e.preventDefault(); openModal(el.dataset.slug); }
 });
+
+// ---- Manage panel: categorize + archive, published to overrides.json via your token ----
+const TOKEN_KEY = 'lp_gh_token';
+const REPO_API = 'https://api.github.com/repos/ncheewee/launchpad/contents/overrides.json';
+const mgbar = document.getElementById('mgbar'), archEl = document.getElementById('archived'),
+      pubBtn = document.getElementById('pubbtn'), tokBtn = document.getElementById('tokbtn'),
+      tokStat = document.getElementById('tokstat'), tokDot = document.getElementById('tokdot'),
+      mgMsg = document.getElementById('mgmsg');
+let dirty = false;
+const getToken = () => localStorage.getItem(TOKEN_KEY) || '';
+function refreshToken(){
+  const has = !!getToken();
+  tokDot.classList.toggle('ok', has);
+  tokStat.textContent = has ? 'Token connected' : 'Not connected';
+  tokBtn.textContent = has ? 'Disconnect' : 'Connect GitHub';
+  pubBtn.disabled = !(has && dirty);
+}
+tokBtn.onclick = ()=>{
+  if(getToken()){ localStorage.removeItem(TOKEN_KEY); refreshToken(); return; }
+  const t = prompt('Paste a GitHub fine-grained token with Contents: read & write on ncheewee/launchpad.\n(Stored only in this browser.)');
+  if(t){ localStorage.setItem(TOKEN_KEY, t.trim()); refreshToken(); }
+};
+function markDirty(){ dirty = true; refreshToken(); mgMsg.textContent = 'Unpublished changes.'; }
+
+document.getElementById('mgbtn').onclick = ()=>{
+  document.body.classList.toggle('manage');
+  if(document.body.classList.contains('manage')){ renderArchived(); refreshToken(); mgbar.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+};
+
+// category change
+railsEl.addEventListener('change', e=>{
+  const sel = e.target.closest('.mcat'); if(!sel) return;
+  const a = BYSLUG[sel.dataset.slug]; if(!a) return;
+  a.cat = sel.value; work.category[a.slug] = sel.value;
+  renderGrids(); markDirty();
+});
+// archive
+railsEl.addEventListener('click', e=>{
+  const b = e.target.closest('.marchv'); if(!b) return;
+  e.preventDefault();
+  const a = BYSLUG[b.dataset.slug]; if(!a) return;
+  a.archived = true;
+  if(!work.archived.includes(a.slug)) work.archived.push(a.slug);
+  renderGrids(); renderArchived(); markDirty();
+});
+// unarchive
+archEl.addEventListener('click', e=>{
+  const b = e.target.closest('.unarch'); if(!b) return;
+  const a = BYSLUG[b.dataset.slug]; if(!a) return;
+  a.archived = false;
+  work.archived = work.archived.filter(s => s.toLowerCase() !== a.slug.toLowerCase());
+  renderGrids(); renderArchived(); markDirty();
+});
+function renderArchived(){
+  const items = DATA.filter(a => a.archived);
+  archEl.classList.toggle('has', true);
+  archEl.innerHTML = `<h2>Archived · ${items.length}</h2>` + (items.length
+    ? items.map(a => `<div class="arow"><div class="ic" style="background:${TINT[a.cat]}">${EMOJI[a.icon]||'📱'}</div>
+        <div class="anm">${esc(a.name)} <span class="aslug">${esc(a.slug)}</span></div>
+        <button class="unarch" data-slug="${a.slug}">Unarchive</button></div>`).join('')
+    : `<div class="arow"><div class="anm" style="color:var(--sub)">Nothing archived. Use the Archive button on a tile.</div></div>`);
+}
+
+async function publish(){
+  const token = getToken(); if(!token){ mgMsg.textContent = 'Connect a token first.'; return; }
+  pubBtn.disabled = true; mgMsg.textContent = 'Publishing…';
+  const payload = { archived: [...new Set(work.archived.map(s=>s.toLowerCase()))].sort(), category: work.category };
+  try{
+    const cur = await fetch(REPO_API + '?ref=main&t=' + Date.now(), { headers:{ Authorization:'Bearer '+token } });
+    const sha = cur.ok ? (await cur.json()).sha : undefined;
+    const body = { message:'Manage: update categories / archive (in-app)', branch:'main',
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2) + '\n'))) };
+    if(sha) body.sha = sha;
+    const res = await fetch(REPO_API, { method:'PUT',
+      headers:{ Authorization:'Bearer '+token, 'Content-Type':'application/json' }, body: JSON.stringify(body) });
+    if(!res.ok){ const t = await res.text(); throw new Error(res.status + ' ' + t.slice(0,120)); }
+    dirty = false; refreshToken();
+    mgMsg.textContent = '✓ Published — rebuilding, live in a few minutes.';
+  }catch(err){
+    pubBtn.disabled = false;
+    mgMsg.textContent = 'Publish failed: ' + err.message;
+  }
+}
+pubBtn.onclick = publish;
+refreshToken();
 </script>
 </body>
 </html>

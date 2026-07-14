@@ -85,17 +85,31 @@ function galleryFor(a) {
   return g;
 }
 
+// In-app management: overrides.json holds category reassignments and the archive
+// list. The Manage panel commits this file; the build applies it here.
+function readOverrides() {
+  try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'overrides.json'), 'utf8')); }
+  catch { return { archived: [], category: {} }; }
+}
+
 function build() {
+  const ov = readOverrides();
+  const catOv = ov.category || {};
+  const archivedSet = new Set((ov.archived || []).map(s => s.toLowerCase()));
   const data = APPS.map(a => {
     const days = daysSince(a.shipped);
-    return { slug:a.slug, name:a.name, cat:a.cat, icon:a.icon, url:a.url,
+    return { slug:a.slug, name:a.name, cat: catOv[a.slug] || a.cat, icon:a.icon, url:a.url,
              desc:a.desc, days, last:relativeDays(days),
+             archived: archivedSet.has(a.slug.toLowerCase()),
              shot:heroFor(a), gallery:galleryFor(a) };
   });
   const template = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
-  const html = template.replace('__DATA_JSON__', JSON.stringify(data));
+  const html = template
+    .replace('__DATA_JSON__', JSON.stringify(data))
+    .replace('__OVERRIDES_JSON__', JSON.stringify(ov));
   fs.writeFileSync(path.join(__dirname, 'index.html'), html);
-  console.log(`Built index.html — ${data.length} apps, ${Math.round(data.length)}% of 100.`);
+  const live = data.filter(a => !a.archived).length;
+  console.log(`Built index.html — ${live} live apps (${data.length - live} archived), ${Math.round(live)}% of 100.`);
 }
 
 // Only build when run directly (so screenshots.js can require this for the app list

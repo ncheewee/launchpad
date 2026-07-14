@@ -17,16 +17,17 @@ const { APPS } = require('./build.js');
 
 const OWNER = 'ncheewee';
 const BUILD = path.join(__dirname, 'build.js');
-const ARCHIVE = path.join(__dirname, 'archive.json');
+const OVERRIDES = path.join(__dirname, 'overrides.json');
 const THUMBS = path.join(__dirname, 'screenshots', 'thumb');
 
-function readArchive() {
-  try { return JSON.parse(fs.readFileSync(ARCHIVE, 'utf8')); } catch { return []; }
+function readOverrides() {
+  try { return JSON.parse(fs.readFileSync(OVERRIDES, 'utf8')); } catch { return { archived: [], category: {} }; }
 }
-function writeArchive(list) {
-  const uniq = [...new Set(list.map(s => s.toLowerCase()))].sort();
-  fs.writeFileSync(ARCHIVE, JSON.stringify(uniq, null, 2) + '\n');
+function writeOverrides(ov) {
+  ov.archived = [...new Set((ov.archived || []).map(s => s.toLowerCase()))].sort();
+  fs.writeFileSync(OVERRIDES, JSON.stringify(ov, null, 2) + '\n');
 }
+function readArchive() { return readOverrides().archived || []; }
 function jsStr(s) { return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\s+/g, ' ').trim(); }
 function prettyName(slug) { return slug.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 function entryLine(a) {
@@ -75,25 +76,17 @@ async function apply() {
   console.log('Auto-added (category "New"):', fresh.map(r => r.name).join(', '));
 }
 
+// Archive = add to overrides.archived. The build drops archived apps from the
+// site and discover won't auto-add them again. Reversible (un-archive by removing
+// the slug from overrides.json). We keep the APPS entry + screenshots so it can
+// come straight back.
 function archiveSlug(raw) {
   const slug = raw.toLowerCase();
-  let lines = fs.readFileSync(BUILD, 'utf8').split('\n');
-  const before = lines.length;
-  const re = new RegExp(`^\\s*\\{\\s*slug:'${slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`);
-  lines = lines.filter(l => !re.test(l));
-  fs.writeFileSync(BUILD, lines.join('\n'));
-
-  const arch = readArchive(); arch.push(slug); writeArchive(arch);
-
-  let removedThumbs = 0;
-  for (const f of [`${slug}.jpg`, `${slug}-2.jpg`, `${slug}-3.jpg`]) {
-    const p = path.join(THUMBS, f);
-    if (fs.existsSync(p)) { fs.unlinkSync(p); removedThumbs++; }
-  }
-  const removedLine = before - lines.length;
-  console.log(`Archived '${slug}': removed ${removedLine} manifest entr${removedLine === 1 ? 'y' : 'ies'}, ` +
-    `${removedThumbs} screenshot(s), and added to archive.json (won't auto-add again).`);
-  if (removedLine === 0) console.warn(`  note: '${slug}' was not in APPS — added to archive.json anyway.`);
+  const ov = readOverrides();
+  ov.archived = ov.archived || [];
+  ov.archived.push(slug);
+  writeOverrides(ov);
+  console.log(`Archived '${slug}': added to overrides.json — it will drop off the site and won't auto-add again.`);
 }
 
 const mode = process.argv[2];
