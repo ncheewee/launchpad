@@ -126,10 +126,11 @@
 
   <div class="wrap">
     <div class="mgbar" id="mgbar">
-      <span class="st"><span class="dot2" id="tokdot"></span><span id="tokstat">Not connected</span></span>
-      <button id="tokbtn">Connect GitHub</button>
+      <span class="st"><span class="dot2" id="tokdot"></span><span id="tokstat">Locked</span></span>
+      <button id="tokbtn">Unlock</button>
+      <button id="setupbtn">Set up / change passphrase</button>
       <button class="pub" id="pubbtn" disabled>Publish changes</button>
-      <span class="st msg" id="mgmsg">Set a category or archive apps below, then publish.</span>
+      <span class="st msg" id="mgmsg">Unlock, then set a category or archive apps, then publish.</span>
     </div>
     <section class="hero" id="hero">
       <div class="eyebrow">The 100 Apps Project</div>
@@ -296,32 +297,87 @@ document.addEventListener('click', e=>{
   if(el){ e.preventDefault(); openModal(el.dataset.slug); }
 });
 
-// ---- Manage panel: categorize + archive, published to overrides.json via your token ----
-const TOKEN_KEY = 'lp_gh_token';
-const REPO_API = 'https://api.github.com/repos/ncheewee/launchpad/contents/overrides.json';
+// ---- Manage panel: categorize + archive; passphrase-unlocked token, publishes overrides.json ----
+const REPO = 'ncheewee/launchpad';
+const CONTENTS = p => `https://api.github.com/repos/${REPO}/contents/${p}`;
+const SECRET_RAW = `https://raw.githubusercontent.com/${REPO}/main/manage-secret.json`;
 const mgbar = document.getElementById('mgbar'), archEl = document.getElementById('archived'),
       pubBtn = document.getElementById('pubbtn'), tokBtn = document.getElementById('tokbtn'),
+      setupBtn = document.getElementById('setupbtn'),
       tokStat = document.getElementById('tokstat'), tokDot = document.getElementById('tokdot'),
       mgMsg = document.getElementById('mgmsg');
 let dirty = false;
-const getToken = () => localStorage.getItem(TOKEN_KEY) || '';
-function refreshToken(){
-  const has = !!getToken();
-  tokDot.classList.toggle('ok', has);
-  tokStat.textContent = has ? 'Token connected' : 'Not connected';
-  tokBtn.textContent = has ? 'Disconnect' : 'Connect GitHub';
-  pubBtn.disabled = !(has && dirty);
+let ghToken = sessionStorage.getItem('lp_gh_token') || '';
+
+// --- WebCrypto: passphrase → AES-GCM key (so the token can live encrypted in the repo) ---
+const _enc = new TextEncoder(), _dec = new TextDecoder();
+const _b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const _unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function deriveKey(pass, salt){
+  const base = await crypto.subtle.importKey('raw', _enc.encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name:'PBKDF2', salt, iterations:250000, hash:'SHA-256' }, base,
+    { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']);
 }
-tokBtn.onclick = ()=>{
-  if(getToken()){ localStorage.removeItem(TOKEN_KEY); refreshToken(); return; }
-  const t = prompt('Paste a GitHub fine-grained token with Contents: read & write on ncheewee/launchpad.\n(Stored only in this browser.)');
-  if(t){ localStorage.setItem(TOKEN_KEY, t.trim()); refreshToken(); }
+async function encryptToken(token, pass){
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pass, salt);
+  const ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, _enc.encode(token));
+  return { v:1, salt:_b64(salt), iv:_b64(iv), ct:_b64(ct) };
+}
+async function decryptToken(blob, pass){
+  const key = await deriveKey(pass, _unb64(blob.salt));
+  const pt = await crypto.subtle.decrypt({ name:'AES-GCM', iv:_unb64(blob.iv) }, key, _unb64(blob.ct));
+  return _dec.decode(pt);
+}
+
+function setToken(t){ ghToken = t; if(t) sessionStorage.setItem('lp_gh_token', t); else sessionStorage.removeItem('lp_gh_token'); updateAuthUI(); }
+function updateAuthUI(){
+  const on = !!ghToken;
+  tokDot.classList.toggle('ok', on);
+  tokStat.textContent = on ? 'Unlocked' : 'Locked';
+  tokBtn.textContent = on ? 'Lock' : 'Unlock';
+  pubBtn.disabled = !(on && dirty);
+}
+function markDirty(){ dirty = true; updateAuthUI(); mgMsg.textContent = 'Unpublished changes.'; }
+
+async function commitFile(path, contentStr, message){
+  const cur = await fetch(CONTENTS(path) + '?ref=main&t=' + Date.now(), { headers:{ Authorization:'Bearer '+ghToken } });
+  const sha = cur.ok ? (await cur.json()).sha : undefined;
+  const body = { message, branch:'main', content: btoa(unescape(encodeURIComponent(contentStr))) };
+  if(sha) body.sha = sha;
+  const res = await fetch(CONTENTS(path), { method:'PUT',
+    headers:{ Authorization:'Bearer '+ghToken, 'Content-Type':'application/json' }, body: JSON.stringify(body) });
+  if(!res.ok) throw new Error(res.status + ' ' + (await res.text()).slice(0,140));
+}
+
+tokBtn.onclick = async ()=>{
+  if(ghToken){ setToken(''); mgMsg.textContent = 'Locked on this device.'; return; }
+  let blob;
+  try{ const r = await fetch(SECRET_RAW + '?t=' + Date.now()); if(!r.ok) throw 0; blob = await r.json(); }
+  catch{ mgMsg.textContent = 'No passphrase set up yet — tap “Set up / change passphrase”.'; return; }
+  const pass = prompt('Enter your Manage passphrase:'); if(!pass) return;
+  mgMsg.textContent = 'Unlocking…';
+  try{ setToken(await decryptToken(blob, pass)); mgMsg.textContent = '✓ Unlocked. Make changes, then Publish.'; }
+  catch{ mgMsg.textContent = 'Wrong passphrase.'; }
 };
-function markDirty(){ dirty = true; refreshToken(); mgMsg.textContent = 'Unpublished changes.'; }
+
+setupBtn.onclick = async ()=>{
+  const t = prompt('Paste a GitHub fine-grained token (Contents: Read and write on ' + REPO + '):'); if(!t) return;
+  const p1 = prompt('Choose a passphrase (use a strong one — it protects the token):'); if(!p1) return;
+  const p2 = prompt('Re-enter passphrase:'); if(p1 !== p2){ mgMsg.textContent = 'Passphrases did not match.'; return; }
+  mgMsg.textContent = 'Saving encrypted token…';
+  try{
+    ghToken = t.trim();
+    const blob = await encryptToken(ghToken, p1);
+    await commitFile('manage-secret.json', JSON.stringify(blob, null, 2) + '\n', 'Manage: set/rotate passphrase-encrypted token');
+    setToken(ghToken);
+    mgMsg.textContent = '✓ Passphrase set. You can now unlock from any device with it.';
+  }catch(err){ ghToken=''; updateAuthUI(); mgMsg.textContent = 'Setup failed: ' + err.message; }
+};
 
 document.getElementById('mgbtn').onclick = ()=>{
   document.body.classList.toggle('manage');
-  if(document.body.classList.contains('manage')){ renderArchived(); refreshToken(); mgbar.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+  if(document.body.classList.contains('manage')){ renderArchived(); updateAuthUI(); mgbar.scrollIntoView({behavior:'smooth',block:'nearest'}); }
 };
 
 // category change
@@ -359,27 +415,17 @@ function renderArchived(){
 }
 
 async function publish(){
-  const token = getToken(); if(!token){ mgMsg.textContent = 'Connect a token first.'; return; }
+  if(!ghToken){ mgMsg.textContent = 'Unlock first.'; return; }
   pubBtn.disabled = true; mgMsg.textContent = 'Publishing…';
   const payload = { archived: [...new Set(work.archived.map(s=>s.toLowerCase()))].sort(), category: work.category };
   try{
-    const cur = await fetch(REPO_API + '?ref=main&t=' + Date.now(), { headers:{ Authorization:'Bearer '+token } });
-    const sha = cur.ok ? (await cur.json()).sha : undefined;
-    const body = { message:'Manage: update categories / archive (in-app)', branch:'main',
-      content: btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2) + '\n'))) };
-    if(sha) body.sha = sha;
-    const res = await fetch(REPO_API, { method:'PUT',
-      headers:{ Authorization:'Bearer '+token, 'Content-Type':'application/json' }, body: JSON.stringify(body) });
-    if(!res.ok){ const t = await res.text(); throw new Error(res.status + ' ' + t.slice(0,120)); }
-    dirty = false; refreshToken();
+    await commitFile('overrides.json', JSON.stringify(payload, null, 2) + '\n', 'Manage: update categories / archive (in-app)');
+    dirty = false; updateAuthUI();
     mgMsg.textContent = '✓ Published — rebuilding, live in a few minutes.';
-  }catch(err){
-    pubBtn.disabled = false;
-    mgMsg.textContent = 'Publish failed: ' + err.message;
-  }
+  }catch(err){ pubBtn.disabled = false; mgMsg.textContent = 'Publish failed: ' + err.message; }
 }
 pubBtn.onclick = publish;
-refreshToken();
+updateAuthUI();
 </script>
 </body>
 </html>
