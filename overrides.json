@@ -4,7 +4,10 @@
     "initiatives-report",
     "ippt-tracker-gist",
     "metriq",
-    "metriq-v16"
+    "metriq-v16",
+    "sg-car-recommender"
   ],
-  "category": {}
+  "category": {
+    "inventory-tracker": "Work"
+  }
 }
