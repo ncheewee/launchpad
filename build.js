@@ -42,6 +42,7 @@ const APPS = [
   { slug:'route7',                    name:'Route 7 Tour Portal',       cat:'Personal',   icon:'map',       url:'https://ncheewee.github.io/route7/',                     shipped:'2026-07-01', desc:'Tour portal for Taiwan’s Route 7 (Yilan → Taoyuan) — live road conditions, stops, and things to know for the drive.' },
   { slug:'inventory-tracker', name:'Inventory Tracker', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/inventory-tracker/', shipped:'2026-07-11', desc:'📦 Mobile-first inventory tracker: camera + Gemini OCR, Google Sheet backend, Telegram notifications, weekly reports' },
   { slug:'sg-car-recommender', name:'Sg Car Recommender', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/sg-car-recommender/', shipped:'2026-07-08', desc:'SG car buying recommender — 10-yr TCO + weighted scoring for the Nov 2026 COE decision. Neon-backed Launchpad app.' },
+  { slug:'ncheewee.github.io', name:'Ncheewee.Github.Io', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/ncheewee.github.io/', shipped:'2026-07-17', desc:'Root site for ncheewee.github.io (hosts Digital Asset Links for SplitLah Android app)' },
   { slug:'launchpad',                 name:'Launchpad',                 cat:'Personal',   icon:'rocket',    url:'https://ncheewee.github.io/launchpad/',                  shipped:'2026-06-28', desc:"The personal app store you're looking at right now — a living index of all 100 app ideas, one shipped tile at a time." },
 ];
 
