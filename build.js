@@ -43,6 +43,8 @@ const APPS = [
   { slug:'inventory-tracker', name:'Inventory Tracker', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/inventory-tracker/', shipped:'2026-07-11', desc:'📦 Mobile-first inventory tracker: camera + Gemini OCR, Google Sheet backend, Telegram notifications, weekly reports' },
   { slug:'sg-car-recommender', name:'Sg Car Recommender', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/sg-car-recommender/', shipped:'2026-07-08', desc:'SG car buying recommender — 10-yr TCO + weighted scoring for the Nov 2026 COE decision. Neon-backed Launchpad app.' },
   { slug:'ncheewee.github.io', name:'Ncheewee.Github.Io', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/ncheewee.github.io/', shipped:'2026-07-17', desc:'Root site for ncheewee.github.io (hosts Digital Asset Links for SplitLah Android app)' },
+  { slug:'crossborder-sg', name:'Crossborder Sg', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/crossborder-sg/', shipped:'2026-07-17', desc:'AI-assisted Singapore–Johor checkpoint recommendation mockup' },
+  { slug:'leasekaki', name:'Leasekaki', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/leasekaki/', shipped:'2026-07-17', desc:'' },
   { slug:'launchpad',                 name:'Launchpad',                 cat:'Personal',   icon:'rocket',    url:'https://ncheewee.github.io/launchpad/',                  shipped:'2026-06-28', desc:"The personal app store you're looking at right now — a living index of all 100 app ideas, one shipped tile at a time." },
 ];
 
