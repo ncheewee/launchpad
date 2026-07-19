@@ -45,6 +45,7 @@ const APPS = [
   { slug:'ncheewee.github.io', name:'Ncheewee.Github.Io', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/ncheewee.github.io/', shipped:'2026-07-17', desc:'Root site for ncheewee.github.io (hosts Digital Asset Links for SplitLah Android app)' },
   { slug:'crossborder-sg', name:'Crossborder Sg', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/crossborder-sg/', shipped:'2026-07-17', desc:'AI-assisted Singapore–Johor checkpoint recommendation mockup' },
   { slug:'leasekaki', name:'Leasekaki', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/leasekaki/', shipped:'2026-07-17', desc:'' },
+  { slug:'eatwhat', name:'Eatwhat', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/eatwhat/', shipped:'2026-07-19', desc:'EatWhat — decide what to eat in 30 seconds' },
   { slug:'launchpad',                 name:'Launchpad',                 cat:'Personal',   icon:'rocket',    url:'https://ncheewee.github.io/launchpad/',                  shipped:'2026-06-28', desc:"The personal app store you're looking at right now — a living index of all 100 app ideas, one shipped tile at a time." },
 ];
 
