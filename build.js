@@ -47,6 +47,7 @@ const APPS = [
   { slug:'leasekaki', name:'Leasekaki', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/leasekaki/', shipped:'2026-07-17', desc:'' },
   { slug:'eatwhat', name:'Eatwhat', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/eatwhat/', shipped:'2026-07-19', desc:'EatWhat — decide what to eat in 30 seconds' },
   { slug:'chemquest', name:'Chemquest', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/chemquest/', shipped:'2026-07-24', desc:'' },
+  { slug:'morphmorph', name:'Morphmorph', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/morphmorph/', shipped:'2026-08-01', desc:'A generative virtual lifeform game where care, touch and time become its body.' },
   { slug:'launchpad',                 name:'Launchpad',                 cat:'Personal',   icon:'rocket',    url:'https://ncheewee.github.io/launchpad/',                  shipped:'2026-06-28', desc:"The personal app store you're looking at right now — a living index of all 100 app ideas, one shipped tile at a time." },
 ];
 
