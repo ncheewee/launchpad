@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Launchpad — a personal app store</title>
 <meta name="description" content="A living index of Chee Wee's 100 app ideas — one shipped tile at a time.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f5f5f7">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Launchpad">
+<meta name="application-name" content="Launchpad">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   :root{--bg:#f5f5f7;--card:#fff;--ink:#1d1d1f;--sub:#86868b;--line:#e3e3e6;
@@ -15,7 +25,8 @@
   .top{position:sticky;top:0;z-index:20;background:rgba(245,245,247,.8);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)}
   .topin{max-width:1080px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;gap:16px}
   .brand{font-weight:700;font-size:20px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px;text-decoration:none}
-  .brand .dot{width:27px;height:27px;border-radius:8px;background:linear-gradient(135deg,#7c6cff,#3b82f6);display:grid;place-items:center;font-size:15px}
+  .brand .dot{width:27px;height:27px;border-radius:8px;background:#0b1020;overflow:hidden;flex:none;display:block}
+  .brand .dot svg{display:block;width:100%;height:100%}
   .search{margin-left:auto;background:#e8e8ed;border:none;border-radius:10px;padding:9px 14px 9px 34px;width:250px;max-width:48vw;font-size:14px;color:var(--ink);
           background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center}
   .search:focus{outline:2px solid var(--a-personal);outline-offset:1px;background-color:#fff}
@@ -86,6 +97,13 @@
   .mlaunch{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#7c6cff,#3b82f6);color:#fff;border-radius:99px;padding:13px 26px;font-weight:600;font-size:15px;text-decoration:none}
   .mlaunch:hover{filter:brightness(1.06)}
   /* manage mode */
+  .instbtn{background:none;border:1px solid var(--a-personal);border-radius:9px;padding:8px 13px;font-size:13.5px;font-weight:600;color:var(--a-personal);cursor:pointer;flex:none;display:none;align-items:center;gap:6px}
+  .instbtn[data-on]{display:inline-flex}
+  .instbtn:hover{background:#f1efff}
+  .instbtn svg{width:14px;height:14px;flex:none}
+  .iostip{position:fixed;z-index:60;max-width:270px;background:var(--ink);color:#fff;font-size:13px;line-height:1.55;padding:11px 13px;border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.28);display:none}
+  .iostip[data-on]{display:block}
+  .iostip b{font-weight:650}
   .mgbtn{background:none;border:1px solid var(--line);border-radius:9px;padding:8px 13px;font-size:13.5px;font-weight:600;color:var(--sub);cursor:pointer;flex:none}
   .mgbtn:hover{color:var(--ink);border-color:var(--sub)}
   body.manage .mgbtn{background:var(--ink);color:#fff;border-color:var(--ink)}
@@ -114,13 +132,14 @@
   .arow button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;color:#2563eb}
   .arow button:hover{background:#eff5ff;border-color:#bcd4f6}
   @media(max-width:640px){.featured{grid-template-columns:1fr}.fimg{min-height:185px}}
-  @media(max-width:560px){.search{width:auto;flex:1}.mbody{padding:16px 18px 20px}.mgbar .msg{margin-left:0}}
+  @media(max-width:560px){.search{width:auto;flex:1}.mbody{padding:16px 18px 20px}.mgbar .msg{margin-left:0}.instbtn{padding:8px 10px}.instbtn i{display:none}}
 </style>
 </head>
 <body>
   <header class="top"><div class="topin">
-    <a class="brand" href="#"><span class="dot">🚀</span>Launchpad</a>
+    <a class="brand" href="#"><span class="dot"><svg viewBox="0 0 512 512" aria-hidden="true" focusable="false"><rect width="512" height="512" fill="#0b1020"/><rect x="80"  y="80"  width="104" height="104" rx="28" fill="#7c6cff"/><rect x="204" y="80"  width="104" height="104" rx="28" fill="#3b82f6"/><rect x="328" y="80"  width="104" height="104" rx="28" fill="#f5a524"/><rect x="80"  y="204" width="104" height="104" rx="28" fill="#16b8a6"/><rect x="204" y="204" width="104" height="104" rx="28" fill="#f5a524"/><rect x="328" y="204" width="104" height="104" rx="28" fill="#7c6cff"/><rect x="80"  y="328" width="104" height="104" rx="28" fill="#3b82f6"/><rect x="204" y="328" width="104" height="104" rx="28" fill="#16b8a6"/><rect x="328" y="328" width="104" height="104" rx="28" fill="#232b42"/></svg></span>Launchpad</a>
     <input class="search" id="q" type="search" placeholder="Search apps" aria-label="Search apps" autocomplete="off">
+    <button class="instbtn" id="instbtn" title="Install Launchpad as an app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 12l5 5 5-5"/><path d="M4 20h16"/></svg><i>Install</i></button>
     <button class="mgbtn" id="mgbtn" title="Manage categories &amp; archive">Manage</button>
   </div></header>
 
@@ -426,6 +445,57 @@ async function publish(){
 }
 pubBtn.onclick = publish;
 updateAuthUI();
+
+// ---- PWA: service worker, install prompt, manifest shortcut ----
+if('serviceWorker' in navigator){
+  addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+
+const instbtn = document.getElementById('instbtn');
+const iostip  = document.getElementById('iostip');
+const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+let deferredPrompt = null;
+
+addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  instbtn.dataset.on = '1';
+});
+
+addEventListener('appinstalled', ()=>{ deferredPrompt = null; delete instbtn.dataset.on; });
+
+// iOS Safari never fires beforeinstallprompt; offer the manual route instead
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) && !window.MSStream;
+if(isIOS && !standalone) instbtn.dataset.on = '1';
+
+function showTip(html){
+  iostip.innerHTML = html;
+  const r = instbtn.getBoundingClientRect();
+  iostip.dataset.on = '1';
+  const w = iostip.offsetWidth;
+  iostip.style.top  = (r.bottom + 10) + 'px';
+  iostip.style.left = Math.max(10, Math.min(r.right - w, innerWidth - w - 10)) + 'px';
+  clearTimeout(showTip._t);
+  showTip._t = setTimeout(()=>{ delete iostip.dataset.on; }, 6000);
+}
+addEventListener('click', e=>{ if(!iostip.contains(e.target) && e.target !== instbtn) delete iostip.dataset.on; }, true);
+
+instbtn.onclick = async ()=>{
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    try{ await deferredPrompt.userChoice; }catch(_){}
+    deferredPrompt = null;
+    delete instbtn.dataset.on;
+    return;
+  }
+  showTip('To install: tap <b>Share</b> in Safari, then <b>Add to Home Screen</b>.');
+};
+
+// manifest shortcut: /launchpad/?panel=manage opens the Manage panel
+if(new URLSearchParams(location.search).get('panel') === 'manage' && !document.body.classList.contains('manage')){
+  document.getElementById('mgbtn').click();
+}
 </script>
+  <div class="iostip" id="iostip"></div>
 </body>
 </html>

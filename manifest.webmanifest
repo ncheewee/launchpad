@@ -1,0 +1,31 @@
+{
+  "id": "/launchpad/",
+  "name": "Launchpad — a personal app store",
+  "short_name": "Launchpad",
+  "description": "A living index of Chee Wee's 100 app ideas — one shipped tile at a time.",
+  "start_url": "/launchpad/",
+  "scope": "/launchpad/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "any",
+  "background_color": "#f5f5f7",
+  "theme_color": "#f5f5f7",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Manage apps",
+      "short_name": "Manage",
+      "description": "Categorise and archive apps, then publish",
+      "url": "/launchpad/?panel=manage",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}
