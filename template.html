@@ -195,7 +195,7 @@ const CATLABEL = {Personal:'Personal', Fun:'Fun & experiments', Work:'Work', New
 const CATORDER = ['Personal','Fun','Work','New'];
 const ACCENT = {Personal:'var(--a-personal)', Fun:'var(--a-fun)', Work:'var(--a-work)', New:'var(--a-new)'};
 const TINT   = {Personal:'#efedfe', Fun:'#fdf0d9', Work:'#e4eefc', New:'#eceef1'};
-const EMOJI  = {receipt:'🧾',idea:'💡',bolt:'⚡',clipboard:'📋',gauge:'🎛️',ball:'⚽',trend:'📈',box:'🧩',building:'🏢',tower:'🗼',message:'💬',rocket:'🚀',car:'🚗',run:'🏃',map:'🗺️',sparkles:'✨',game:'🎮'};
+const EMOJI  = {receipt:'🧾',idea:'💡',bolt:'⚡',clipboard:'📋',gauge:'🎛️',ball:'⚽',trend:'📈',box:'🧩',building:'🏢',tower:'🗼',message:'💬',rocket:'🚀',car:'🚗',run:'🏃',map:'🗺️',sparkles:'✨',game:'🎮',fruit:'🍉'};
 const TARGET = 100;
 const SHIPPED = DATA.length;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -224,7 +224,7 @@ requestAnimationFrame(()=>{document.getElementById('progfill').style.width = (SH
 const featEl = document.getElementById('featured');
 const featPool = DATA.filter(a=>a.slug!=='launchpad' && a.shot && !a.archived);
 if(featPool.length){
-  const feat = featPool.reduce((m,a)=> a.days < m.days ? a : m, featPool[0]);
+  const feat = featPool.reduce((m,a)=> a.days <= m.days ? a : m, featPool[0]);
   featEl.href = feat.url;
   featEl.dataset.slug = feat.slug;
   featEl.innerHTML =
