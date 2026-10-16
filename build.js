@@ -52,6 +52,7 @@ const APPS = [
   { slug:'ripe',                      name:'Ripe',                      cat:'Fun',        icon:'fruit',     url:'https://ncheewee.github.io/ripe/',                   shipped:'2026-10-05', desc:'Drop the fruit and merge two of a kind. Install it once, then play with no connection.' },
   { slug:'ten',                       name:'Ten',                       cat:'Fun',        icon:'ten',       url:'https://ncheewee.github.io/ten/',                    shipped:'2026-10-05', desc:'Slide the tiles. Pairs that add to 10 disappear. Install it once, then play with no connection.' },
   { slug:'todays-48',                 name:'2048 Challenge',            cat:'Fun',        icon:'today',     url:'https://ncheewee.github.io/todays-48/',              shipped:'2026-10-05', desc:'One 2048 board for everyone today. Sign in with Google and climb the board. Install it once, then the puzzle still plays with no connection.' },
+  { slug:'trips', name:'Trips', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/trips/', shipped:'2026-10-15', desc:'Beautiful trip timeline PWA' },
   { slug:'launchpad',                 name:'Launchpad',                 cat:'Personal',   icon:'rocket',    url:'https://ncheewee.github.io/launchpad/',                  shipped:'2026-06-28', desc:"The personal app store you're looking at right now — a living index of all 100 app ideas, one shipped tile at a time." },
 ];
 
