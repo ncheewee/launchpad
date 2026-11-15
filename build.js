@@ -54,6 +54,7 @@ const APPS = [
   { slug:'todays-48',                 name:'2048 Challenge',            cat:'Fun',        icon:'today',     url:'https://ncheewee.github.io/todays-48/',              shipped:'2026-10-05', desc:'One 2048 board for everyone today. Sign in with Google and climb the board. Install it once, then the puzzle still plays with no connection.' },
   { slug:'trips', name:'Trips', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/trips/', shipped:'2026-10-15', desc:'Beautiful trip timeline PWA' },
   { slug:'sg-chargers', name:'Chargers', cat:'Personal', icon:'bolt', url:'https://ncheewee.github.io/sg-chargers/', shipped:'2026-11-07', desc:'Public EV chargers in Singapore, nearest first, with the price and status LTA publishes. Find only — no account and no payment.' },
+  { slug:'recall-tracker', name:'Recall Tracker', cat:'Personal', icon:'map', url:'https://recall-tracker.ncheewee.workers.dev/', shipped:'2026-11-14', desc:'Recall tracker for DH626 RSS Katong: live map of who has reported in, MC tagging and the roster.' },
   { slug:'launchpad',                 name:'Launchpad',                 cat:'Personal',   icon:'rocket',    url:'https://ncheewee.github.io/launchpad/',                  shipped:'2026-06-28', desc:"The personal app store you're looking at right now — a living index of all 100 app ideas, one shipped tile at a time." },
 ];
 
