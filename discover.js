@@ -44,6 +44,10 @@ async function gh(p) {
 
 async function apply() {
   const listed = new Set(APPS.map(a => a.slug.toLowerCase()));
+  // Also skip repos whose Pages URL is already used by a hand-named entry (e.g. 'rocky' -> rocky-dashboard).
+  const norm = u => String(u || '').toLowerCase().replace(/\/+$/, '');
+  const listedUrls = new Set(APPS.map(a => norm(a.url)));
+  const pagesUrl = r => (r.homepage && /github\.io/.test(r.homepage)) ? r.homepage : `https://${OWNER}.github.io/${r.name}/`;
   const archived = new Set(readArchive().map(s => s.toLowerCase()));
   const repos = [];
   for (let page = 1; page <= 5; page++) {
@@ -54,6 +58,7 @@ async function apply() {
   const fresh = repos.filter(r =>
     r.has_pages &&
     !listed.has(r.name.toLowerCase()) &&
+    !listedUrls.has(norm(pagesUrl(r))) &&
     !archived.has(r.name.toLowerCase())
   );
   if (!fresh.length) { console.log('Auto-add: nothing new to add.'); return; }

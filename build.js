@@ -56,7 +56,7 @@ const APPS = [
   { slug:'sg-chargers', name:'Chargers', cat:'Personal', icon:'bolt', url:'https://ncheewee.github.io/sg-chargers/', shipped:'2026-11-07', desc:'Public EV chargers in Singapore, nearest first, with the price and status LTA publishes. Find only — no account and no payment.' },
   { slug:'recall-tracker', name:'Recall Tracker', cat:'Personal', icon:'map', url:'https://recall-tracker.ncheewee.workers.dev/', shipped:'2026-11-14', desc:'Recall tracker for DH626 RSS Katong: live map of who has reported in, MC tagging and the roster.' },
   { slug:'knights-tour', name:'Knights Tour', cat:'New', icon:'sparkles', url:'https://ncheewee.github.io/knights-tour/', shipped:'2026-11-22', desc:'Knight\'s tour brute-force visualizer (The Devil\'s Plan)' },
-  { slug:'rocky', name:'Rocky', cat:'Personal', icon:'car', url:'https://l03-charging-dashboard-6jdw.pages.grok.bot/', shipped:'2026-11-18', desc:'XPENG L03 charging & ownership dashboard.' },
+  { slug:'rocky', name:'Rocky', cat:'Personal', icon:'car', url:'https://ncheewee.github.io/rocky-dashboard/', shipped:'2026-11-18', desc:'XPENG L03 charging & ownership dashboard.' },
   { slug:'launchpad',                 name:'Launchpad',                 cat:'Personal',   icon:'rocket',    url:'https://ncheewee.github.io/launchpad/',                  shipped:'2026-06-28', desc:"The personal app store you're looking at right now — a living index of all 100 app ideas, one shipped tile at a time." },
 ];
 
